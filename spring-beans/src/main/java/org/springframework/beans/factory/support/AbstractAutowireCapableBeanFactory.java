@@ -579,6 +579,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				logger.debug("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
+			// 此方法是调用父类DefaultSingletonBeanRegistry的方法
+			// 重点！！！将实例化的bean但是还没初始化的bean添加到singletonFactories中
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 

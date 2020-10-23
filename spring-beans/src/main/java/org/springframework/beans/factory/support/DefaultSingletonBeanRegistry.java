@@ -85,6 +85,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	/** Set of registered singletons, containing the bean names in registration order */
 	private final Set<String> registeredSingletons = new LinkedHashSet<>(256);
 
+	// 存放正在创建的bean，可以理解为已经执行完构造方法，还没设置属性的bean
 	/** Names of beans that are currently in creation */
 	private final Set<String> singletonsCurrentlyInCreation =
 			Collections.newSetFromMap(new ConcurrentHashMap<>(16));
@@ -135,10 +136,10 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 */
 	protected void addSingleton(String beanName, Object singletonObject) {
 		synchronized (this.singletonObjects) {
-			this.singletonObjects.put(beanName, singletonObject);
-			this.singletonFactories.remove(beanName);
-			this.earlySingletonObjects.remove(beanName);
-			this.registeredSingletons.add(beanName);
+			this.singletonObjects.put(beanName, singletonObject);//添加单例对象到map中
+			this.singletonFactories.remove(beanName);//从早期暴露的工厂中移除，此map在解决循环依赖中发挥了关键的作用
+		    this.earlySingletonObjects.remove(beanName);//从早期暴露的对象map中移除
+			this.registeredSingletons.add(beanName);//添加到已注册的单例名字集合中
 		}
 	}
 
@@ -178,9 +179,9 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	@Nullable
 	protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 		//从map中获取bean如果不为空直接返回，不再进行初始化工作
-		//讲道理一个程序员提供的对象这里一般都是为空的
+		//正常逻辑下，一个程序员提供的对象这里一般都是为空的
 		Object singletonObject = this.singletonObjects.get(beanName);
-		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {// 判断bean是否正在创建中
 			synchronized (this.singletonObjects) {
 				singletonObject = this.earlySingletonObjects.get(beanName);
 				if (singletonObject == null && allowEarlyReference) {

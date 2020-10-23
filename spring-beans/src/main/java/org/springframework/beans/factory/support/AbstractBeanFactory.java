@@ -269,12 +269,6 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		 * 之后再来断点，这样就确保了我们是在获取这个bean的时候调用的
 		 *
 		 * 需要说明的是在初始化时候调用一般都是返回null
-		 *
-		 *
-		 *
-		 *
-		 *
-		 *
 		 * lazy
 		 */
 		Object sharedInstance = getSingleton(beanName);
@@ -305,6 +299,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			/**
 			 * 原型
 			 * 如果是原型不应该在初始化的时候创建
+			 * （触发到这里方式，首先是refresh（），然后一步步走到这，而refresh（）是初始化方法）
+			 * 也可以大致理解为，初始化spring时，只是实例化单例bean，不实例化原型的bean，可能是用到时才创建
 			 */
 			if (isPrototypeCurrentlyInCreation(beanName)) {
 				throw new BeanCurrentlyInCreationException(beanName);
