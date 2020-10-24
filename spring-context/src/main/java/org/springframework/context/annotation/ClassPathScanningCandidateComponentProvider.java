@@ -314,6 +314,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 			return addCandidateComponentsFromIndex(this.componentsIndex, basePackage);
 		}
 		else {
+			//-->>startScan11
 			return scanCandidateComponents(basePackage);
 		}
 	}
@@ -386,9 +387,11 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 			boolean debugEnabled = logger.isDebugEnabled();
 			for (String type : types) {
 				MetadataReader metadataReader = getMetadataReaderFactory().getMetadataReader(type);
+
 				if (isCandidateComponent(metadataReader)) {
 					AnnotatedGenericBeanDefinition sbd = new AnnotatedGenericBeanDefinition(
 							metadataReader.getAnnotationMetadata());
+					// isCandidateComponent 这里不是判断该类有没有@Component注解，不要被名字忽悠了
 					if (isCandidateComponent(sbd)) {
 						if (debugEnabled) {
 							logger.debug("Using candidate component class from index: " + type);
@@ -418,8 +421,9 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 		Set<BeanDefinition> candidates = new LinkedHashSet<>();
 		try {
 			String packageSearchPath = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX +
-					resolveBasePackage(basePackage) + '/' + this.resourcePattern;
-			//asm 读取class文件
+					resolveBasePackage(basePackage) + '/' + this.resourcePattern; // resourcePattern = "**/*.class"
+			//asm 读取class文件，类似于把包名下所有的文件都读出来了放到数组中
+			//-->>startScan12
 			Resource[] resources = getResourcePatternResolver().getResources(packageSearchPath);
 			boolean traceEnabled = logger.isTraceEnabled();
 			boolean debugEnabled = logger.isDebugEnabled();
@@ -429,11 +433,17 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 				}
 				if (resource.isReadable()) {
 					try {
+						// 这一步做的就是读取了类文件的路径，或者说就是拿到了类文件的文件名，放到metadataReader中
+						// 类似于file.getname().  类的文件名，其实就是类名
 						MetadataReader metadataReader = getMetadataReaderFactory().getMetadataReader(resource);
 						if (isCandidateComponent(metadataReader)) {
 							ScannedGenericBeanDefinition sbd = new ScannedGenericBeanDefinition(metadataReader);
 							sbd.setResource(resource);
 							sbd.setSource(resource);
+							//System.out.println("file bean name:"+sbd.getBeanClassName());
+							if (sbd.getBeanClassName().equals("com.luban.app.Animal")){
+								System.out.println("fas");
+							}
 							if (isCandidateComponent(sbd)) {
 								if (debugEnabled) {
 									logger.debug("Identified candidate component class: " + resource);
@@ -527,6 +537,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	 */
 	protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
 		AnnotationMetadata metadata = beanDefinition.getMetadata();
+		//System.out.println("isConcrete:"+metadata.isConcrete());
 		return (metadata.isIndependent() && (metadata.isConcrete() ||
 				(metadata.isAbstract() && metadata.hasAnnotatedMethods(Lookup.class.getName()))));
 	}

@@ -279,6 +279,7 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 			// a class path resource (multiple resources for same name possible)
 			if (getPathMatcher().isPattern(locationPattern.substring(CLASSPATH_ALL_URL_PREFIX.length()))) {
 				// a class path resource pattern
+				//-->>startScan13   这就是读取文件的全过程
 				return findPathMatchingResources(locationPattern);
 			}
 			else {

@@ -108,7 +108,7 @@ final class PostProcessorRegistrationDelegate {
 			registryProcessors.addAll(currentRegistryProcessors);
 			//最重要。注意这里是方法调用
 			//执行所有BeanDefinitionRegistryPostProcessor
-
+            //-->>startScan3
 			invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
 			//执行完成了所有BeanDefinitionRegistryPostProcessor
 			//这个list只是一个临时变量，故而要清除
@@ -301,8 +301,9 @@ final class PostProcessorRegistrationDelegate {
 	private static void invokeBeanDefinitionRegistryPostProcessors(
 			Collection<? extends BeanDefinitionRegistryPostProcessor> postProcessors, BeanDefinitionRegistry registry) {
 
-		//因为只有一条数据
+		//因为只有一条数据 就是ConfigurationClassPostProcessor
 		for (BeanDefinitionRegistryPostProcessor postProcessor : postProcessors) {
+			//-->>startScan4
 			postProcessor.postProcessBeanDefinitionRegistry(registry);
 		}
 	}

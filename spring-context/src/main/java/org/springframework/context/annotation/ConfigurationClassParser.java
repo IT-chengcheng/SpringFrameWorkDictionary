@@ -168,9 +168,11 @@ class ConfigurationClassParser {
 			//
 			try {
 				if (bd instanceof AnnotatedBeanDefinition) {
+					// 能进这个判断，bd就是AnnotatedGenericBeanDefinition。手动注册的spring的bean，还有spring自己的bean，都是AnnotatedGenericBeanDefinition
 					//解析注解对象，并且把解析出来的bd放到map，但是这里的bd指的是普通的
 					//何谓不普通的呢？比如@Bean 和各种beanFactoryPostProcessor得到的bean不在这里put
 					//但是是这里解析，只是不put而已
+					//-->>startScan6
 					parse(((AnnotatedBeanDefinition) bd).getMetadata(), holder.getBeanName());
 				}
 				else if (bd instanceof AbstractBeanDefinition && ((AbstractBeanDefinition) bd).hasBeanClass()) {
@@ -249,6 +251,7 @@ class ConfigurationClassParser {
 		// Recursively process the configuration class and its superclass hierarchy.
 		SourceClass sourceClass = asSourceClass(configClass);
 		do {
+			//-->>startScan7
 			sourceClass = doProcessConfigurationClass(configClass, sourceClass);
 		}
 		while (sourceClass != null);
@@ -293,8 +296,10 @@ class ConfigurationClassParser {
 			for (AnnotationAttributes componentScan : componentScans) {
 				// The config class is annotated with @ComponentScan -> perform the scan immediately
 				//扫描普通类=componentScan=com.luban
-				//这里扫描出来所有@@Component
+				//这里扫描出来所有@Component
 				//并且把扫描的出来的普通bean放到map当中
+				// 真正开始扫描程序员加了注解的类
+				//-->>startScan8
 				Set<BeanDefinitionHolder> scannedBeanDefinitions =
 						this.componentScanParser.parse(componentScan, sourceClass.getMetadata().getClassName());
 				// Check the set of scanned definitions for any further config classes and parse recursively if needed

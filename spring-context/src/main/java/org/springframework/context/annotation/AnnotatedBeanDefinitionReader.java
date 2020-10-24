@@ -292,7 +292,8 @@ public class AnnotatedBeanDefinitionReader {
 		}
 
 		/**
-		 * 这个BeanDefinitionHolder也是一个数据结构
+		 * 这个BeanDefinitionHolder也是一个数据结构，封装成这个holder的目的：从源码看来就是往下传递的时候，作为一个参数
+		 * 传递
 		 */
 		BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);
 

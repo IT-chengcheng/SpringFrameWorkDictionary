@@ -105,7 +105,7 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 	 * Create a new GenericApplicationContext.
 	 * @see #registerBeanDefinition
 	 * @see #refresh
-	 * 一个工厂
+	 * 这个bean工厂类是用到的最多的，最重要的bean工厂。可以说是整个spring中，bean工厂起主要作用的就是他，还有他的直接父类（主要父类实例化createBean）。
 	 */
 	public GenericApplicationContext() {
 		this.beanFactory = new DefaultListableBeanFactory();

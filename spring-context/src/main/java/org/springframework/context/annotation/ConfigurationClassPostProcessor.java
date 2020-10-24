@@ -232,6 +232,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		}
 		this.registriesPostProcessed.add(registryId);
 
+		//-->>startScan5
 		processConfigBeanDefinitions(registry);
 	}
 
@@ -266,7 +267,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		//定义一个list存放app 提供的bd（项目当中提供了@Compent）
 		List<BeanDefinitionHolder> configCandidates = new ArrayList<>();
 		//获取容器中注册的所有bd名字
-		//7个
+		//7个，这个registry 就是 DefaultListableBeanFactory
 		String[] candidateNames = registry.getBeanDefinitionNames();
 
 		/**
@@ -290,13 +291,13 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			//		candidateIndicators.add(ImportResource.class.getName());
 			//beanDef == appconfig
 			else if (ConfigurationClassUtils.checkConfigurationClassCandidate(beanDef, this.metadataReaderFactory)) {
-				//BeanDefinitionHolder 也可以看成一个数据结构
+				//BeanDefinitionHolder 也可以看成一个数据结构,也只是为了方便传值
 				configCandidates.add(new BeanDefinitionHolder(beanDef, beanName));
 			}
 		}
 
 		// Return immediately if no @Configuration classes were found
-		if (configCandidates.isEmpty()) {
+		if (configCandidates.isEmpty()) {//如果没有加@Configuration注解的类，那下面的逻辑都不执行了，下面的扫描包也就不执行了
 			return;
 		}
 
@@ -342,6 +343,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		Set<BeanDefinitionHolder> candidates = new LinkedHashSet<>(configCandidates);
 		Set<ConfigurationClass> alreadyParsed = new HashSet<>(configCandidates.size());
 		do {
+			//-->>startScan6   candidates就是带有@Configure注解的类的数组
 			parser.parse(candidates);
 			parser.validate();
 			//map.keyset

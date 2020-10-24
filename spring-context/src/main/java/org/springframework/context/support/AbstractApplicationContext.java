@@ -521,10 +521,13 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			// Tell the subclass to refresh the internal bean factory.
 			//返回一个factory 为什么需要返回一个工厂
 			//因为要对工厂进行初始化
+			// 这个工厂就是 DefaultListableBeanFactory
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
-			//准备工厂
+			//准备工厂，给这个工厂添加一些工具，比如beanPostprocess后置处理器
+			// 经过最开始的register，只是将beanFactory中的map或者list放满了bean，这一步呢就是在给这个工厂添加一些工具
+			// 为了以后，能用这些工具处理工厂中的bean。
 			prepareBeanFactory(beanFactory);
 
 			try {
@@ -537,6 +540,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// Invoke factory processors registered as beans in the context.
 				//在spring的环境中去执行已经被注册的 factory processors
 				//设置执行自定义的ProcessBeanFactory 和spring内部自己定义的
+				// spring开始扫描包的第一入口，也就是@ComponetScan发挥作用的入口 -->>startScan1
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
@@ -726,7 +730,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		//这个list是在AnnotationConfigApplicationContext被定义
 		//所谓的自定义的就是你手动调用AnnotationConfigApplicationContext.addBeanFactoryPostProcesor();
 
-
+          //-->>startScan2
 		PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
 
 		// Detect a LoadTimeWeaver and prepare for weaving, if found in the meantime

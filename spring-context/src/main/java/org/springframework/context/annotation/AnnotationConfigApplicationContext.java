@@ -97,6 +97,8 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 		 * 父类的构造方法
 		 * 创建一个读取注解的Bean定义读取器
 		 * 什么是bean定义？BeanDefinition
+		 *
+		 * 传入参数是this，this是applicationContext，他的父类实现了BeanDefinitionRegistry接口，这个接口就是个bd注册器
 		 */
 		this.reader = new AnnotatedBeanDefinitionReader(this);
 
@@ -129,7 +131,8 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	public AnnotationConfigApplicationContext(Class<?>... annotatedClasses) {
 		//annotatedClasses  appconfig.class
 		//这里由于他有父类，故而会先调用父类的构造方法，然后才会调用自己的构造方法
-		//在自己构造方法中初始一个读取器和扫描器
+		//父类的构造方法实例化了beanFactory
+		//自己构造方法中初始化一个bd读取器和扫描器（扫描加了注解的类）
 		this();
 		register(annotatedClasses);
 		refresh();

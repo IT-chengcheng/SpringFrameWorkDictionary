@@ -274,10 +274,11 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 		for (String basePackage : basePackages) {
 			//扫描basePackage路径下的java文件
 			//符合条件的并把它转成BeanDefinition类型
+			//-->>startScan10
 			Set<BeanDefinition> candidates = findCandidateComponents(basePackage);
 
 
-
+			// 将一个个bd放入到beanfactory的map中
 			for (BeanDefinition candidate : candidates) {
 				//解析scope属性
 				ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(candidate);
@@ -299,7 +300,8 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 					definitionHolder =
 							AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
 					beanDefinitions.add(definitionHolder);
-					//加入到map当中
+					//加入到beanfactory的map当中
+					//-->>startScan11
 					registerBeanDefinition(definitionHolder, this.registry);
 				}
 			}

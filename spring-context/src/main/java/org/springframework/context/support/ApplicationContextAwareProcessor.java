@@ -121,11 +121,10 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 			if (bean instanceof MessageSourceAware) {
 				((MessageSourceAware) bean).setMessageSource(this.applicationContext);
 			}
-			//spring帮你set一个applicationContext对象
-			//所以当我们自己的一个对象实现了ApplicationContextAware对象只需要提供setter就能得到applicationContext对象
-			//此处应该有鲜花。。。。
+			//如果bean实现了ApplicationContextAware接口，spring 就会给该beanset一个applicationContext对象
+			//所以当我们自己的一个对象实现了ApplicationContextAware对象只需要实现该接口方法就能得到applicationContext对象
 			if (bean instanceof ApplicationContextAware) {
-				if (!bean.getClass().getSimpleName().equals("IndexDao"))
+
 				((ApplicationContextAware) bean).setApplicationContext(this.applicationContext);
 			}
 		}

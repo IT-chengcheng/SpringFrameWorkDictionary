@@ -370,6 +370,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 */
 	@Override
 	public void setBeanClassName(@Nullable String beanClassName) {
+		// com.luban.app.Car  是带包名的
 		this.beanClass = beanClassName;
 	}
 
