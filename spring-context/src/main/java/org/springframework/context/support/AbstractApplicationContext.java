@@ -538,7 +538,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
-				//在spring的环境中去执行已经被注册的 factory processors
+				//在spring的环境中去  执行  已经被注册的 factory processors
 				//设置执行自定义的ProcessBeanFactory 和spring内部自己定义的
 				// spring开始扫描包的第一入口，也就是@ComponetScan发挥作用的入口 -->>startScan1
 				invokeBeanFactoryPostProcessors(beanFactory);
@@ -549,7 +549,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// 一个beanDefinition放到了beanfactory的map中， 这一步就是将map中的所有的BP通过
 				//beanFactory.getBeanNamesForType(BeanPostProcessor.class）方法找出来,注册到beanFactory的数组中，这个数组在
 				//DefaultListableBeanFactory父类AbstractBeanFactory中List<BeanPostProcessor> beanPostProcessors
-				// 什么时候开始执行这些beanPostProcessors呢？在实例化bean完成后，开始执行。doCreateBean（）方法
+				// 注册的同时，也把这些BeanPostProcessor实例化了，因为要用他们对普通bean进行加工
+				// 什么时候开始执行这些beanPostProcessors呢？在实例化普通bean完成后，开始执行。doCreateBean（）方法
 				registerBeanPostProcessors(beanFactory);
 
 				// Initialize message source for this context.
@@ -568,6 +569,12 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// Instantiate all remaining (non-lazy-init) singletons.
 				/**
 				 * 到这里才真正开始实例化bean，当然仅限于懒加载的单例bean
+				 * 1.实例化剩余的所有非延迟加载单例对象
+				 * 2.为什么说是剩余的？因为在上面的registerBeanPostProcessors中已经把所有BeanPostProcessors所有对象都已经实例化过了;
+				 * 3.这加载的时候会判断bean是不是 FactoryBean类型的
+				 *   3.1如果是FactoryBean类型，则getBean(&beanName),这里是把FactoryBean本身的对象给实例化了，而没有调它的getObject方法；
+				 *      3.1.1 还要判断是不是SmartFactoryBean类型的，SmartFactoryBean继承了FactoryBean接口；但是它多了一个	boolean isEagerInit();方法；这个方法就是判断是否需要通过FactoryBean的getObject()生成实例；
+				 *   3.2如果不是FactoryBean类型，直接getBean就行了；
 				 */
 				finishBeanFactoryInitialization(beanFactory);
 
@@ -727,13 +734,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * <p>Must be called before singleton instantiation.
 	 */
 	protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
-		//这个地方需要注意getBeanFactoryPostProcessors()是获取手动给spring的BeanFactoryPostProcessor
-		//自定义并不仅仅是程序员自己写的
-		//自己写的可以加companent也可以不加
-		//如果加了getBeanFactoryPostProcessors()这个地方得不得，是spring自己扫描的
-		//为什么得不到getBeanFactoryPostProcessors（）这个方法是直接获取一个list，
-		//这个list是在AnnotationConfigApplicationContext被定义
-		//所谓的自定义的就是你手动调用AnnotationConfigApplicationContext.addBeanFactoryPostProcesor();
+		//这个地方需要注意getBeanFactoryPostProcessors()是获取程序员手动给spring的BeanFactoryPostProcessor
+		// 如果程序员没有自定义BeanFactoryPostProcessor，那这个list就是空
+		//可以手动调用AnnotationConfigApplicationContext.addBeanFactoryPostProcesor();
 
           //-->>startScan2
 		PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());

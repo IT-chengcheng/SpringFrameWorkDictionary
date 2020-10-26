@@ -415,7 +415,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		Map<String, AbstractBeanDefinition> configBeanDefs = new LinkedHashMap<>();
 		for (String beanName : beanFactory.getBeanDefinitionNames()) {
 			BeanDefinition beanDef = beanFactory.getBeanDefinition(beanName);
-			//判断是否是一个全注解类
+			//判断是否是一个全注解类，就是判断是否加了@Configure注解，如果加了就将这个类变成cglib代理
 			//扫描是全注解类？full和lite的关系
 			if (ConfigurationClassUtils.isFullConfigurationClass(beanDef)) {
 				if (!(beanDef instanceof AbstractBeanDefinition)) {

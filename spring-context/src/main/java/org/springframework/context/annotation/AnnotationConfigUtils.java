@@ -171,8 +171,9 @@ public class AnnotationConfigUtils {
 		}
 
 		if (!registry.containsBeanDefinition(AUTOWIRED_ANNOTATION_PROCESSOR_BEAN_NAME)) {
-			//AutowiredAnnotationBeanPostProcessor 实现了 MergedBeanDefinitionPostProcessor
+			//AutowiredAnnotationBeanPostProcessor(就是对加了@Autowired注解的属性进行赋值，在populate那里) 实现了 MergedBeanDefinitionPostProcessor
 			//MergedBeanDefinitionPostProcessor 最终实现了 BeanPostProcessor
+			// AutowiredAnnotationBeanPostProcessor->InstantiationAwareBeanPostProcessorAdapter（实现了InstantiationAwareBeanPostProcessor）
 			RootBeanDefinition def = new RootBeanDefinition(AutowiredAnnotationBeanPostProcessor.class);
 			def.setSource(source);
 			beanDefs.add(registerPostProcessor(registry, def, AUTOWIRED_ANNOTATION_PROCESSOR_BEAN_NAME));

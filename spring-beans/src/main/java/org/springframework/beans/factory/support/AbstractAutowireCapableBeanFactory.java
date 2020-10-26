@@ -590,7 +590,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Initialize the bean instance.
 		Object exposedObject = bean;
 		try {
-			//设置属性，非常重要
+			//设置属性，非常重要，也是通过后置处理器给属性自动赋值的
 			populateBean(beanName, mbd, instanceWrapper);
 			//执行后置处理器，aop就是在这里完成的处理
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
@@ -1379,7 +1379,15 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			if (hasInstAwareBpps) {
 				for (BeanPostProcessor bp : getBeanPostProcessors()) {
 					if (bp instanceof InstantiationAwareBeanPostProcessor) {
+						// 实现InstantiationAwareBeanPostProcessor接口的类 目前有：
+						/**
+						 *AutowiredAnnotationBeanPostProcessor 处理加了@Autowired的属性
+						 * CommonAnnotationBeanPostProcessor  处理加了@Resourece的属性
+						 * RequiredAnnotationBeanPostProcessor 处理加了@Required的属性
+						 */
 						InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
+						// 执行这个方法就是上面三个类中的方法
+						// 这个方法可不是BeanPostProcessor接口的方法，而是InstantiationAwareBeanPostProcessor里面新加的方法
 						pvs = ibp.postProcessPropertyValues(pvs, filteredPds, bw.getWrappedInstance(), beanName);
 						if (pvs == null) {
 							return;

@@ -60,12 +60,13 @@ final class PostProcessorRegistrationDelegate {
 			List<BeanFactoryPostProcessor> regularPostProcessors = new ArrayList<>();
 			List<BeanDefinitionRegistryPostProcessor> registryProcessors = new ArrayList<>();
 
-			//自定义的beanFactoryPostProcessors
+			//程序员手动加入的beanFactoryPostProcessors，如果没有自定义BeanFactoryPostProcessor，那么这个数组就是空
 			for (BeanFactoryPostProcessor postProcessor : beanFactoryPostProcessors) {
 				if (postProcessor instanceof BeanDefinitionRegistryPostProcessor) {
 					BeanDefinitionRegistryPostProcessor registryProcessor =
 							(BeanDefinitionRegistryPostProcessor) postProcessor;
 					registryProcessor.postProcessBeanDefinitionRegistry(registry);
+					// 将程序员自定义的BFP添加到这是个数组中，下面还会把spring的BFP也加到这个数组中，合并到一块
 					registryProcessors.add(registryProcessor);
 				}
 				else {//BeanDefinitionRegistryPostProcessor  BeanfactoryPostProcessor
@@ -77,13 +78,14 @@ final class PostProcessorRegistrationDelegate {
 			// uninitialized to let the bean factory post-processors apply to them!
 			// Separate between BeanDefinitionRegistryPostProcessors that implement
 			// PriorityOrdered, Ordered, and the rest.
-			//这个currentRegistryProcessors 放的是spring内部自己实现了BeanDefinitionRegistryPostProcessor接口的对象
 
+			//这个currentRegistryProcessors 放的是spring内部自己实现了BeanDefinitionRegistryPostProcessor接口的对象
 			List<BeanDefinitionRegistryPostProcessor> currentRegistryProcessors = new ArrayList<>();
 
 			// First, invoke the BeanDefinitionRegistryPostProcessors that implement PriorityOrdered.
-			//BeanDefinitionRegistryPostProcessor 等于 BeanFactoryPostProcessor
-			//getBeanNamesForType  根据bean的类型获取bean的名字ConfigurationClassPostProcessor
+			//BeanDefinitionRegistryPostProcessor 继承 BeanFactoryPostProcessor
+			//getBeanNamesForType  根据bean的类型获取bean的名字只会获取到一个：ConfigurationClassPostProcessor
+			// 这个ConfigurationClassPostProcessor是在reader的构造方法中加进去的，伴随着那一堆beanPostProcessor一块加进去的
 			String[] postProcessorNames =
 					beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
 			//这个地方可以得到一个BeanFactoryPostProcessor，因为是spring默认在最开始自己注册的
@@ -95,25 +97,29 @@ final class PostProcessorRegistrationDelegate {
 			//所以这里spring'在一开始就注册了一个BeanFactoryPostProcessor，用来插手springfactory的实例化过程
 			//在这个地方断点可以知道这个类叫做ConfigurationClassPostProcessor
 			//ConfigurationClassPostProcessor那么这个类能干嘛呢？可以参考源码
-			//下面我们对这个牛逼哄哄的类（他能插手spring工厂的实例化过程还不牛逼吗？）重点解释
+			//下面我们对这个牛逼哄哄的类（他能插手spring工厂的实例化过程还不牛逼吗？）
 			for (String ppName : postProcessorNames) {
 				if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
+					// 执行beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class)，意味着就已经这个类实例化了
 					currentRegistryProcessors.add(beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
 					processedBeans.add(ppName);
 				}
 			}
 			//排序不重要，况且currentRegistryProcessors这里也只有一个数据
 			sortPostProcessors(currentRegistryProcessors, beanFactory);
-			//合并list，不重要(为什么要合并，因为还有自己的)
+			//合并list，不重要(为什么要合并，因为还有自己的)，上面已经加了程序员自定义的了
 			registryProcessors.addAll(currentRegistryProcessors);
 			//最重要。注意这里是方法调用
-			//执行所有BeanDefinitionRegistryPostProcessor
+			//执行所有BeanDefinitionRegistryPostProcessor，其实currentRegistryProcessors这个数组里就一个，就是spring自己的那个
             //-->>startScan3
 			invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
 			//执行完成了所有BeanDefinitionRegistryPostProcessor
 			//这个list只是一个临时变量，故而要清除
 			currentRegistryProcessors.clear();
 
+			/**
+			 * 执行完上面的startScan3，意味着就已经完成了所有的扫描，所有加了注解的类都已经变成bd放到了beanfactory的map中了
+			 */
 			// Next, invoke the BeanDefinitionRegistryPostProcessors that implement Ordered.
 			postProcessorNames = beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
 			for (String ppName : postProcessorNames) {
@@ -121,6 +127,8 @@ final class PostProcessorRegistrationDelegate {
 					currentRegistryProcessors.add(beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
 					processedBeans.add(ppName);
 				}
+				// 执行完for循环，currentRegistryProcessors又有BeanfactoryPostprocess了，这些BeanfactoryPostprocess就是所有的的了
+				// spring的，程序员手动加的，以及扫描出来的
 			}
 			sortPostProcessors(currentRegistryProcessors, beanFactory);
 			registryProcessors.addAll(currentRegistryProcessors);

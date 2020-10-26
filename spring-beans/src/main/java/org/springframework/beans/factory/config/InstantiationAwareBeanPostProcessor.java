@@ -44,6 +44,10 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator#setCustomTargetSourceCreators
  * @see org.springframework.aop.framework.autoproxy.target.LazyInitTargetSourceCreator
  */
+/**
+ 此接口是BeanPostProcessor的子接口，用于在实例化钱回调和在实例化后但在显示属性设置或之前的回调自动装配。
+ 这个接口是一个特殊用途的接口，主要用于框架内的内部使用。建议尽可能使用BeanPostProcessor接口
+ */
 public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 
 	/**
@@ -68,6 +72,10 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	 * @see #postProcessAfterInstantiation
 	 * @see org.springframework.beans.factory.support.AbstractBeanDefinition#hasBeanClass
 	 */
+	/**
+	 在目标bean被实例化之前应用这个BeanPostProcessor。返回的bean对象可以是一个代理来代替目标bean，
+	 有效地抑制目标bean的默认实例化。如果此方法返回非空对象，则创建bean的过程将被短路。
+	 */
 	@Nullable
 	default Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
 		return null;
@@ -87,6 +95,11 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	 * instances being invoked on this bean instance.
 	 * @throws org.springframework.beans.BeansException in case of errors
 	 * @see #postProcessBeforeInstantiation
+	 */
+	/**
+	 通过构造函数或工厂方法实例化bean后执行操作，但在Spring属性填充(来自显式属性或自动装配)发生之前。
+	 这是在给定bean上执行自定义字段注入的理想回调。例如，就在Spring的自动装配开始之前。创建的bean实例，
+	 属性尚未设置。
 	 */
 	default boolean postProcessAfterInstantiation(Object bean, String beanName) throws BeansException {
 		return true;
@@ -109,6 +122,11 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	 * PropertyValues instance), or {@code null} to skip property population
 	 * @throws org.springframework.beans.BeansException in case of errors
 	 * @see org.springframework.beans.MutablePropertyValues
+	 */
+	/**
+	 在工厂应用给定的属性值之前，对它们进行后处理到给定的bean。允许检查是否所有依赖项已被满足。
+	 还允许替换要应用的属性值，通常通过根据原始的PropertyValues创建一个新的MutablePropertyValues
+	 实例，添加或删除特定值。
 	 */
 	@Nullable
 	default PropertyValues postProcessPropertyValues(
