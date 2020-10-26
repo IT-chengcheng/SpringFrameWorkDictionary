@@ -99,6 +99,10 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 		 * 什么是bean定义？BeanDefinition
 		 *
 		 * 传入参数是this，this是applicationContext，他的父类实现了BeanDefinitionRegistry接口，这个接口就是个bd注册器
+		 *
+		 * 进入AnnotatedBeanDefinitionReader构造方法，找到AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
+		 * 这里就是spring将自己建立的BeanPostProcessor等，包装成bd，注册到了beanfactory的map中，供后面docreatebean（）里面使用，
+		 * 去处理bean
 		 */
 		this.reader = new AnnotatedBeanDefinitionReader(this);
 

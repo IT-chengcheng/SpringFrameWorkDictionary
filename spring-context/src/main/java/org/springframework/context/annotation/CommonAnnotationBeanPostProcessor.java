@@ -212,6 +212,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 	}
 
 
+
 	/**
 	 * Ignore the given resource type when resolving {@code @Resource}
 	 * annotations.

@@ -72,7 +72,7 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	 * of when looking more closely at a particular
 	 * {@link org.springframework.beans.factory.parsing.ComponentDefinition},
 	 * but not when looking at the overall configuration of an application.
-	 * ROLE_SUPPORT =1实际上就是说，我这个Bean是用户的，是从配置文件中过来的
+	 * ROLE_SUPPORT =1实际上就是说，我这个Bean是用户的，是从配置文件中过来的 这个属性会加到beanDefinition中
 	 */
 	int ROLE_SUPPORT = 1;
 
@@ -81,7 +81,7 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	 * entirely background role and has no relevance to the end-user. This hint is
 	 * used when registering beans that are completely part of the internal workings
 	 * of a {@link org.springframework.beans.factory.parsing.ComponentDefinition}.
-	 * 就是我这Bean是Spring自己的，和你用户没有一毛钱关系
+	 * 就是我这Bean是Spring自己的，和你用户没有一毛钱关系,这个属性会加到beanDefinition中
 	 */
 	int ROLE_INFRASTRUCTURE = 2;
 

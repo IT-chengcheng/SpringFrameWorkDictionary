@@ -412,8 +412,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	@Override
 	public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName)
 			throws BeansException {
-
 		Object result = existingBean;
+		List<BeanPostProcessor> beanPostProcessors = getBeanPostProcessors();
+		// 这个BP数组，里面有很多processors，spring内部的是通过reader的构造方法入口加入的其中包括CommonAnnotationBeanPostProcessor
+		// 还有程序员自定义的processors
+		// 这个类commonAnnotationBeanPostProcess有一个功能：处理加了@postcontruct注解的方法
 		for (BeanPostProcessor processor : getBeanPostProcessors()) {
 			Object current = processor.postProcessBeforeInitialization(result, beanName);
 			if (current == null) {
@@ -1722,17 +1725,25 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}, getAccessControlContext());
 		}
 		else {
+			//执行部分aware接口方法，另一部分在后置处理器中ApplicationContextAwareProcessor
 			invokeAwareMethods(beanName, bean);
 		}
-
 		Object wrappedBean = bean;
 		if (mbd == null || !mbd.isSynthetic()) {
 			//执行后置处理的befor
-			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+// 比如CommonAnnotationBeanProcessor
+				wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+
 		}
 
 		try {
+
 			//执行bean的声明周期回调中的init方法
+			/**
+			 * 这里的bean初始化方法可不是指的加了@postContruct注解的方法，从源码中看指的是：
+			 * 1 实现了接口InitializingBean的afterPropertiesSet方法
+			 * 2 自己通过注解指定的初始化方法：@Bean(initMethod = "init"）
+			 */
 			invokeInitMethods(beanName, wrappedBean, mbd);
 		}
 		catch (Throwable ex) {

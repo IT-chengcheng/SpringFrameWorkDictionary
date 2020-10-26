@@ -526,7 +526,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 			// Prepare the bean factory for use in this context.
 			//准备工厂，给这个工厂添加一些工具，比如beanPostprocess后置处理器
-			// 经过最开始的register，只是将beanFactory中的map或者list放满了bean，这一步呢就是在给这个工厂添加一些工具
+			// 经过最开始的register，只是将beanFactory中的map或者list放了spring自己的bean，这一步呢就是在给这个工厂添加一些工具
 			// 为了以后，能用这些工具处理工厂中的bean。
 			prepareBeanFactory(beanFactory);
 
@@ -545,6 +545,11 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 				// Register bean processors that intercept bean creation.
 				//注册beanPostProcessor
+				// 上一步扫描的步骤完成后，spring自定义的BP（比如CommonAnnotationBeanProcessor），以及用户自己的BP，都已经作为
+				// 一个beanDefinition放到了beanfactory的map中， 这一步就是将map中的所有的BP通过
+				//beanFactory.getBeanNamesForType(BeanPostProcessor.class）方法找出来,注册到beanFactory的数组中，这个数组在
+				//DefaultListableBeanFactory父类AbstractBeanFactory中List<BeanPostProcessor> beanPostProcessors
+				// 什么时候开始执行这些beanPostProcessors呢？在实例化bean完成后，开始执行。doCreateBean（）方法
 				registerBeanPostProcessors(beanFactory);
 
 				// Initialize message source for this context.

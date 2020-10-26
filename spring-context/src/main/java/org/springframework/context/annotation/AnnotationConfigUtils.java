@@ -131,6 +131,7 @@ public class AnnotationConfigUtils {
 	 * @param registry the registry to operate on
 	 */
 	public static void registerAnnotationConfigProcessors(BeanDefinitionRegistry registry) {
+		// 这个方法有返回值，但是这里没用，因为这个方法里已经做了注册bd的操作
 		registerAnnotationConfigProcessors(registry, null);
 	}
 
@@ -157,6 +158,8 @@ public class AnnotationConfigUtils {
 			}
 		}
 
+		// 会将beanDefs返回出去，但是从spring初始化那个入口开始看，并没用使用这个返回值
+		// 因为beanDefs执行add方法的时候，顺便执行了registerPostProcessor（这个方法就已经做了将bd放到beanfactory中），仔细看
 		Set<BeanDefinitionHolder> beanDefs = new LinkedHashSet<>(8);
 		//BeanDefinitio的注册，这里很重要，需要理解注册每个bean的类型
 		if (!registry.containsBeanDefinition(CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME)) {
