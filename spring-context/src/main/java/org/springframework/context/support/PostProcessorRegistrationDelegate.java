@@ -107,14 +107,15 @@ final class PostProcessorRegistrationDelegate {
 			}
 			//排序不重要，况且currentRegistryProcessors这里也只有一个数据
 			sortPostProcessors(currentRegistryProcessors, beanFactory);
-			//合并list，不重要(为什么要合并，因为还有自己的)，上面已经加了程序员自定义的了
+			//合并list，(为什么要合并，因为还有自己的)，上面已经加了程序员自定义的了
+			// registryProcessors目前只有自己的   currentRegistryProcessors是spring自定义的，俩合并一起
 			registryProcessors.addAll(currentRegistryProcessors);
 			//最重要。注意这里是方法调用
 			//执行所有BeanDefinitionRegistryPostProcessor，其实currentRegistryProcessors这个数组里就一个，就是spring自己的那个
             //-->>startScan3
 			invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
 			//执行完成了所有BeanDefinitionRegistryPostProcessor
-			//这个list只是一个临时变量，故而要清除
+			//这个list只是一个临时变量，故而要清除，下面会执行多次，因为要把之前执行过的从数组中移除，然后把新的加进去
 			currentRegistryProcessors.clear();
 
 			/**
@@ -127,8 +128,8 @@ final class PostProcessorRegistrationDelegate {
 					currentRegistryProcessors.add(beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
 					processedBeans.add(ppName);
 				}
-				// 执行完for循环，currentRegistryProcessors又有BeanfactoryPostprocess了，这些BeanfactoryPostprocess就是所有的的了
-				// spring的，程序员手动加的，以及扫描出来的
+				// 执行完for循环，currentRegistryProcessors又有BeanfactoryPostprocess了，这些BeanfactoryPostprocess是扫描出来的
+				//何为扫描出来的？ 就是实现了BeanDefinitionRegistryPostProcessor接口，并且加了@Component注解的，并不是手动添加的
 			}
 			sortPostProcessors(currentRegistryProcessors, beanFactory);
 			registryProcessors.addAll(currentRegistryProcessors);
@@ -136,6 +137,7 @@ final class PostProcessorRegistrationDelegate {
 			currentRegistryProcessors.clear();
 
 			// Finally, invoke all other BeanDefinitionRegistryPostProcessors until no further ones appear.
+			// 这一步做的很全面，防止执行完上一步后，又加入了新的BeanDefinitionRegistryPostProcessor，做到疏而不漏
 			boolean reiterate = true;
 			while (reiterate) {
 				reiterate = false;
@@ -157,10 +159,25 @@ final class PostProcessorRegistrationDelegate {
 			//执行BeanFactoryPostProcessor的回调，前面不是吗？
 			//前面执行的BeanFactoryPostProcessor的子类BeanDefinitionRegistryPostProcessor的回调
 			//这是执行的是BeanFactoryPostProcessor    postProcessBeanFactory
-			//ConfuguratuonClassPpostProcssor
+			/**
+			 * 这里面有三个数组
+			 * 1、regularPostProcessors里面存放的是程序员手动添加的BeanFactoryPostProcessor，非BeanDefinitionRegistryPostProcessor
+			 *      而且不包括扫描出来的
+			 * 2、registryProcessors 存放的是所有的BeanDefinitionRegistryPostProcessor，spring的，程序员的，以及扫描出来的
+			 *      spring的就只有ConfuguratuonClassPostProcssor，也就是说程序员没加的话，扫描包没有的话，这个数组始终就一个
+			 * 3、currentRegistryProcessors里面只放BeanDefinitionRegistryPostProcessor，放进去，接着执行，然后清空，然后再放，只是个临时变量
+			 * 再次强调：前面所有的代码目的是为了执行BeanDefinitionRegistryPostProcessor接口的拓展方法postProcessBeanDefinitionRegistry
+			 * 下面这两行才是执行BeanFactoryPostProcessor的接口方法postProcessBeanFactory、
+			 * 而且是分开了执行，首先执行了子接口的实现类BeanDefinitionRegistryPostProcessor ->postProcessBeanFactory()
+			 *                   再执行BeanFactoryPostProcessor的实现类 ->postProcessBeanFactory()
+			 */
 			invokeBeanFactoryPostProcessors(registryProcessors, beanFactory);
-			//自定义BeanFactoryPostProcessor
+
 			invokeBeanFactoryPostProcessors(regularPostProcessors, beanFactory);
+
+			/**
+			 * 执行完这两个方法后，扫描包中的BeanFactoryPostProcessor还未处理
+			 */
 		}
 
 		else {
