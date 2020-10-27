@@ -52,6 +52,8 @@ final class PostProcessorRegistrationDelegate {
 			ConfigurableListableBeanFactory beanFactory, List<BeanFactoryPostProcessor> beanFactoryPostProcessors) {
 
 		// Invoke BeanDefinitionRegistryPostProcessors first, if any.
+		// 存放的是所有已经执行了的processor。看这段英文翻译过来就是：优先执行BeanDefinitionRegistryPostProcessors接口类
+		// 然后执行他的父类接口BeanFactoryPostProcessor的实现类
 		Set<String> processedBeans = new HashSet<>();
 
 		if (beanFactory instanceof BeanDefinitionRegistry) {
@@ -176,7 +178,13 @@ final class PostProcessorRegistrationDelegate {
 			invokeBeanFactoryPostProcessors(regularPostProcessors, beanFactory);
 
 			/**
-			 * 执行完这两个方法后，扫描包中的BeanFactoryPostProcessor还未处理
+			 * 执行完这两个方法后，
+			 * 扫描包中的BeanDefinitionRegistryPostProcessor接口类都已经执行完毕
+			 * 扫描包中的BeanFactoryPostProcessor接口类还未执行
+			 *
+			 * 这里说的执行，指的是：BeanFactoryPostProcessor的方法 postProcessBeanFactory()
+			 * BeanDefinitionRegistryPostProcessor 继承 BeanFactoryPostProcessor，拓展了一个方法postProcessBeanDefinitionRegistry（）
+			 * 这个方法已经全部执行完毕
 			 */
 		}
 
@@ -188,6 +196,12 @@ final class PostProcessorRegistrationDelegate {
 		// Do not initialize FactoryBeans here: We need to leave all regular beans
 		// uninitialized to let the bean factory post-processors apply to them!
 		//ConfigurationClassPostProcessor
+		/**
+		 * 从下面开始的代码，就是将扫描包中扫描出来的所有BeanFactoryPostProcessor，提取出来，执行。
+		 * 但是执行的时候，有一个判断会，过滤掉之前已经执行完的BeanFactoryPostProcessor，
+		 * 以及他的子类BeanDefinitionRegistryPostProcessor。也就是说，接着来就是执行剩下的扫描包中纯BeanFactoryPostProcessor
+		 */
+		// 程序员手动add（）的，通过这个方法是取不出来的，因为自己加的不会封装成bd，也就不会加到beanfactory的map中
 		String[] postProcessorNames =
 				beanFactory.getBeanNamesForType(BeanFactoryPostProcessor.class, true, false);
 
@@ -199,6 +213,7 @@ final class PostProcessorRegistrationDelegate {
 		for (String ppName : postProcessorNames) {
 			if (processedBeans.contains(ppName)) {
 				// skip - already processed in first phase above
+				// 最开始上面的每一步的代码，只要执行了PostProcessor了的，接口类，都放到了这个数组里了
 			}
 			else if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
 				priorityOrderedPostProcessors.add(beanFactory.getBean(ppName, BeanFactoryPostProcessor.class));
