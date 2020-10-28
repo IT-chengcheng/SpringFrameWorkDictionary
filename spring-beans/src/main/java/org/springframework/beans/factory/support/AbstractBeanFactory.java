@@ -248,8 +248,11 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		 *   实现类所创建的 bean。在 BeanFactory 中，FactoryBean 的实现类和其他的 bean 存储
 		 *   方式是一致的，即 <beanName, bean>，beanName 中是没有 & 这个字符的。所以我们需要
 		 *   将 name 的首字符 & 移除，这样才能从缓存里取到 FactoryBean 实例。
-		 * 2、还是别名的问题，转换需要
-		 * &beanName
+		 * 2、什么时候会以 & 字符开头。
+		 * a.程序员手动调用通过名字获取bean的方法
+		 * b.程序通过Class类型获取bean时，最终还是调用到通过名字获取。例如：Person实现了FactoryBean，getObject（）返回Dog，
+		 *  applicationContext.getBean（Person.class）这时，调用到这里，传的name就是“&person”
+		 *  applicationContext.getBean（Dog.class）这时，调用到这里，传的name就是“person”
 		 */
 		final String beanName = transformedBeanName(name);
 		Object bean;
@@ -527,19 +530,35 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 	@Override
 	public boolean isTypeMatch(String name, ResolvableType typeToMatch) throws NoSuchBeanDefinitionException {
-		String beanName = transformedBeanName(name);
 
+		// 将“&”符号去掉
+		String beanName = transformedBeanName(name);
 		// Check manually registered singletons.
 		Object beanInstance = getSingleton(beanName, false);
+		/**
+		 * 整个方法的主要逻辑就是
+		 * 1、如果上面获取的beanInstance实现了FactoryBean接口，就调用接口的getObjectType（），跟传入的type对比
+		 * 2、如果没实现，就看当前获取的beanInstance是否跟传入的type一个类型
+		 */
 		if (beanInstance != null && beanInstance.getClass() != NullBean.class) {
 			if (beanInstance instanceof FactoryBean) {
-				if (!BeanFactoryUtils.isFactoryDereference(name)) {
+				if (!BeanFactoryUtils.isFactoryDereference(name)) {//name不带“&”
 					Class<?> type = getTypeForFactoryBean((FactoryBean<?>) beanInstance);
 					return (type != null && typeToMatch.isAssignableFrom(type));
 				}
-				else {
+				else {//name带“&”
 					return typeToMatch.isInstance(beanInstance);
 				}
+				/**
+				 * 这个if，else有啥作用，第一遍会走if，第二遍会走else，为啥呢？分两种情况 ：
+				 * Person 实现了 FactoryBean  实现方法getObjectType（） 返回Dog，spring容器里只有Person，不会有Dog
+				 * 1、外面调用的是  applicationContext.getBean(Dog.Class)
+				 *  传入的“person”获取到Person，调用getObjectType（）返回Dog，符合Dog.Class
+				 * 2、外面调用的是 applicationContext.getBean(Person.Class)
+				 *  开始传入的是“person”，不带“&”，获取到Person，调用getObjectType（）返回Dog，不符合Person.Class
+				 *  返回false，外面会再调用一遍，这时传入的是“&person”，就进入了else，获取到的Person 符合 Person.Class
+				 *  所以这时候返回去的name值为带“&”的,接下来就是通过带“&”的name获取bean，怎么做到的?看doGetBean（String name）
+				 */
 			}
 			else if (!BeanFactoryUtils.isFactoryDereference(name)) {
 				if (typeToMatch.isInstance(beanInstance)) {
@@ -1655,27 +1674,53 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	protected Object getObjectForBeanInstance(
 			Object beanInstance, String name, String beanName, @Nullable RootBeanDefinition mbd) {
 
+		/**四种情况
+		 * 1、带&   非FactoryBean
+		 * 2、带&   是FactoryBean
+		 * 3、不带&   非FactoryBean
+		 * 4、不带&   是FactoryBean
+		 */
 		// Don't let calling code try to dereference the factory if the bean isn't a factory.
-		if (BeanFactoryUtils.isFactoryDereference(name)) {
+		if (BeanFactoryUtils.isFactoryDereference(name)) {//如果带前缀“&”
 			if (beanInstance instanceof NullBean) {
 				return beanInstance;
 			}
-			if (!(beanInstance instanceof FactoryBean)) {
+			if (!(beanInstance instanceof FactoryBean)) {//带&   非FactoryBean  1,没有这样情况，直接抛异常
 				throw new BeanIsNotAFactoryException(transformedBeanName(name), beanInstance.getClass());
 			}
+
 		}
 
 		// Now we have the bean instance, which may be a normal bean or a FactoryBean.
 		// If it's a FactoryBean, we use it to create a bean instance, unless the
 		// caller actually wants a reference to the factory.
 		if (!(beanInstance instanceof FactoryBean) || BeanFactoryUtils.isFactoryDereference(name)) {
+			//不带&   非FactoryBean  3 ;  带&   是FactoryBean 2
+
+			// 3 就是最普通的bean，直接返回
+			// 2  就是Person实现了FactoryBean，得这样取Person person = applicationContext.getBean("&person")
 			return beanInstance;
 		}
 
+		// 最后一种情况就是 -> 不带&   是FactoryBean,  也就是Dog dog = applicationContext.getBean("person")
 		Object object = null;
 		if (mbd == null) {
+			// 从缓存中取，其实就是一个map，在 抽象类 FactoryBeanRegistrySupport中
+			/**补充一句继承关系，横着为实现接口，竖着为继承关系
+			 *  DefaultListableBeanFactory  -> ConfigurableListableBeanFactory  -> BeanFactory
+			 *  AbstractAutowireCapableBeanFactory
+			 *  AbstractBeanFactory
+			 *  FactoryBeanRegistrySupport(抽象类) 有个缓存 Map<String, Object> factoryBeanObjectCache ，就是这里用到的缓存
+			 *  DefaultSingletonBeanRegistry  这个类里面就是拥有三级缓存的类，也就是spring bean所在地  -> SingletonBeanRegistry
+			 */
 			object = getCachedObjectForFactoryBean(beanName);
 		}
+		/** Person实现了FactoryBean,返回Dog， 这两个bean都存起来了
+		 *  person存在了 DefaultSingletonBeanRegistry 的 Map<String, Object> singletonObjects “person”：new Person（）
+		 *  dog 存在了  FactoryBeanRegistrySupport Map<String, Object> factoryBeanObjectCache  “person”：new Dog()
+		 *
+		 *  bd的map中是只存person的，不存dog
+		 */
 		if (object == null) {
 			// Return bean instance from factory.
 			FactoryBean<?> factory = (FactoryBean<?>) beanInstance;
@@ -1684,6 +1729,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				mbd = getMergedLocalBeanDefinition(beanName);
 			}
 			boolean synthetic = (mbd != null && mbd.isSynthetic());
+			// 这个方法，获得bean，同时放入缓存
 			object = getObjectFromFactoryBean(factory, beanName, !synthetic);
 		}
 		return object;

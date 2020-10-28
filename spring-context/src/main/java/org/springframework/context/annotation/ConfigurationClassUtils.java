@@ -119,12 +119,18 @@ abstract class ConfigurationClassUtils {
 			//如果存在Configuration 注解,则为BeanDefinition 设置configurationClass属性为full
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_FULL);
 		}
-		//判断是否加了以下注解，摘录isLiteConfigurationCandidate的源码
-		//     candidateIndicators.add(Component.class.getName());
-		//		candidateIndicators.add(ComponentScan.class.getName());
-		//		candidateIndicators.add(Import.class.getName());
-		//		candidateIndicators.add(ImportResource.class.getName());
-		//如果不存在Configuration注解，spring则认为是一个部分注解类
+
+		/**
+		 * 如果AnnotationMetadata 中有Component,ComponentScan,Import,ImportResource 注解中的任意一个,或者存在 被
+		 * @bean 注解的方法,则返回true.则设置configurationClass属性为lite
+		 *
+		 * 判断是否加了以下注解，摘录isLiteConfigurationCandidate的源码
+		candidateIndicators.add(Component.class.getName());
+		candidateIndicators.add(ComponentScan.class.getName());
+		candidateIndicators.add(Import.class.getName());
+		candidateIndicators.add(ImportResource.class.getName());
+		如果不存在Configuration注解，spring则认为是一个部分注解类
+		 */
 		else if (isLiteConfigurationCandidate(metadata)) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_LITE);
 		}

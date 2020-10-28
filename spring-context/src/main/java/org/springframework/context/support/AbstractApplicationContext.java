@@ -1158,7 +1158,14 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 	@Override
 	public <T> T getBean(Class<T> requiredType) throws BeansException {
-		//assertBeanFactoryActive();
+		assertBeanFactoryActive();
+		/**
+		 * 这是通过类的Class类型获得bean实例的入口
+		 * 通过Class类型获得bean实例，比通过名字获得bean实例耗时多，也就是稍微慢点
+		 * 因为通过Class类型获得bean实例，本质上也是通过名字获得bean实例，但是前面多了一大步
+		 * 就是通过Class类型获得所有属于该类型的名字数组，然后在给这个名字数组做一通操作，选出
+		 * 一个名字，在通过该名字获得bean实例
+		 */
 		return getBeanFactory().getBean(requiredType);
 	}
 

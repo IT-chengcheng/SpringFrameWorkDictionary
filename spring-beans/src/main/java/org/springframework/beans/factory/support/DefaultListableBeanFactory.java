@@ -161,6 +161,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	private final Map<Class<?>, String[]> allBeanNamesByType = new ConcurrentHashMap<>(64);
 
 	/** Map of singleton-only bean names, keyed by dependency type */
+	//这是个缓存，存放的是：单例对象的Class类 作为key，名字数组作为value（就是类名，类的首字母小写，也会存在前面加&）
 	private final Map<Class<?>, String[]> singletonBeanNamesByType = new ConcurrentHashMap<>(64);
 
 	/** List of bean definition names, in registration order */
@@ -348,19 +349,21 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 	@Override
 	public <T> T getBean(Class<T> requiredType, @Nullable Object... args) throws BeansException {
-		//NamedBeanHolder 可以理解为一个数据结构和map差不多，里面就是存了bean的名字和bean的实例
-		//这个类的注释可以点开查看
+		//NamedBeanHolder 可以理解为一个数据结构和map差不多，里面就是存了bean的名字和bean的实例；
+		// 其实跟beanDefinitionHolder一样，都是又多包了一层而已
 		//A simple holder for a given bean name plus bean instance
-		//一个简单的bean和名字的容器
-		//通过resolveNamedBean方法得到这个holder，故而需要看这个resolveNamedBean方法如何得到这个holder的
+		//获得holder就是获得了bean，所有下面获得holder方法是关键
 		NamedBeanHolder<T> namedBean = resolveNamedBean(requiredType, args);
 		if (namedBean != null) {
 			return namedBean.getBeanInstance();
 		}
+		//如果当前Spring容器中没有获取到相应的Bean信息，则从父容器中获取
 		BeanFactory parent = getParentBeanFactory();
 		if (parent != null) {
+			//一个重复的调用过程，只不过BeanFactory的实例变了
 			return (args != null ? parent.getBean(requiredType, args) : parent.getBean(requiredType));
 		}
+		//如果都没有获取到，则抛出异常
 		throw new NoSuchBeanDefinitionException(requiredType);
 	}
 
@@ -412,15 +415,18 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		if (resolvedBeanNames != null) {
 			return resolvedBeanNames;
 		}
+		/**
+		 * 这是真正根据类型获取名字的真正入口。
+		 */
 		resolvedBeanNames = doGetBeanNamesForType(ResolvableType.forRawClass(type), includeNonSingletons, true);
 		if (ClassUtils.isCacheSafe(type, getBeanClassLoader())) {
-			cache.put(type, resolvedBeanNames);
+			cache.put(type, resolvedBeanNames);//放入到缓存中，其实就是个map，sping有很多这样的设计
 		}
 		return resolvedBeanNames;
 	}
 
 	//根据类型去factory中获取对应类的名字
-	//比如在工厂初始化的时候可以根据BeanFactory去获取所有的BeanFactoryProcessor
+	//比如在工厂初始化的时候可以从BeanFactory的map中获取所有的BeanFactoryPostProcessor
 	private String[] doGetBeanNamesForType(ResolvableType type, boolean includeNonSingletons, boolean allowEagerInit) {
 		List<String> result = new ArrayList<>();
 
@@ -436,8 +442,14 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 							(mbd.hasBeanClass() || !mbd.isLazyInit() || isAllowEagerClassLoading()) &&
 									!requiresEagerInitForType(mbd.getFactoryBeanName()))) {
 						// In case of FactoryBean, match object created by FactoryBean.
+						//是不是FactoryBean的子类
 						boolean isFactoryBean = isFactoryBean(beanName, mbd);
 						BeanDefinitionHolder dbd = mbd.getDecoratedDefinition();
+						/**
+						 * 这里其他的几个变量的意思都差不多  重点关注isTypeMatch()这个方法
+						 * isTypeMatch()就是判断beanName取出的对象类型，或者通过getObjectType（）取出的类型，是不是最初传入的Class类型
+						 *如果isTypeMatch()这个方法返回true的话，我们会把这个beanName即factoryBeanLearn 放入到result中返回
+						 */
 						boolean matchFound =
 								(allowEagerInit || !isFactoryBean ||
 										(dbd != null && !mbd.isLazyInit()) || containsSingleton(beanName)) &&
@@ -445,11 +457,14 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 										(dbd != null ? mbd.isSingleton() : isSingleton(beanName))) &&
 								isTypeMatch(beanName, type);
 						if (!matchFound && isFactoryBean) {
+							// 先判断没有匹配上，会给name拼一个前缀“&”，在调用isTypeMatch匹配一次，重新给matchFound赋值
+							// 如果加了“&”后，就匹配上了，说明这次获取bean，传入的type类型就是实现FactoryBean接口的当前类
 							// In case of FactoryBean, try to match FactoryBean instance itself next.
 							beanName = FACTORY_BEAN_PREFIX + beanName;
 							matchFound = (includeNonSingletons || mbd.isSingleton()) && isTypeMatch(beanName, type);
 						}
 						if (matchFound) {
+							// 匹配上了，直接返回
 							result.add(beanName);
 						}
 					}
@@ -1020,6 +1035,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	@Nullable
 	private <T> NamedBeanHolder<T> resolveNamedBean(Class<T> requiredType, @Nullable Object... args) throws BeansException {
 		Assert.notNull(requiredType, "Required type must not be null");
+		/**
+		 * 一、这个方法就是才开始说的，比直接拿名字获取bean耗时的地方，就是因为多了这一步，通过类型找名字
+		 */
 		String[] candidateNames = getBeanNamesForType(requiredType);
 		/**
 		 * 得到对象的名字，因为对象可能有别名故而需要处理别名
@@ -1038,7 +1056,10 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		if (candidateNames.length == 1) {
 			String beanName = candidateNames[0];
-			//这的getBean才是真正获取对象的方法
+			/**
+			 * 二、这里才是真正开始获取对象，因为前面已经拿到了名字，这里通过getBean(beanName, requiredType, args)
+			 * 就是开始通过名字获取对象
+			 */
 			return new NamedBeanHolder<>(beanName, getBean(beanName, requiredType, args));
 		}
 		else if (candidateNames.length > 1) {
