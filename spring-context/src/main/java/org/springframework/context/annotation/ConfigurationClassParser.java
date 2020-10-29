@@ -311,6 +311,7 @@ class ConfigurationClassParser {
 					}
 					//检查  todo
 					if (ConfigurationClassUtils.checkConfigurationClassCandidate(bdCand, this.metadataReaderFactory)) {
+						// 递归调用
 						parse(bdCand.getBeanClassName(), holder.getBeanName());
 					}
 				}
@@ -548,6 +549,8 @@ class ConfigurationClassParser {
 	 */
 	private Set<SourceClass> getImports(SourceClass sourceClass) throws IOException {
 		Set<SourceClass> imports = new LinkedHashSet<>();
+
+		//用作 是否已经 判断过的标志
 		Set<SourceClass> visited = new LinkedHashSet<>();
 		collectImports(sourceClass, imports, visited);
 		return imports;
@@ -568,7 +571,11 @@ class ConfigurationClassParser {
 	 */
 	private void collectImports(SourceClass sourceClass, Set<SourceClass> imports, Set<SourceClass> visited)
 			throws IOException {
-
+/**
+ * 下面代码的意思就是：遍历当前类的所有的注解，判断注解是不是Import注解，如果是，就获取注解的value值，
+ * 如果不是，再递归判断，该注解上的所有的注解。直到找到单个类所涉及的所有的Import注解的value值
+ * 这也就是为什么可以用自定义注解 跟 @Import 注解搭配使用的原因。因为这里会寻找注解的注解，会一个不落的找出来
+ */
 		if (visited.add(sourceClass)) {
 			for (SourceClass annotation : sourceClass.getAnnotations()) {
 				String annName = annotation.getMetadata().getClassName();
@@ -646,8 +653,9 @@ class ConfigurationClassParser {
 					if (candidate.isAssignable(ImportSelector.class)) {
 						// Candidate class is an ImportSelector -> delegate to it to determine imports
 						Class<?> candidateClass = candidate.loadClass();
-						//反射实现一个对象
+						//反射实例化这个selector实现类
 						ImportSelector selector = BeanUtils.instantiateClass(candidateClass, ImportSelector.class);
+						// 实例化了selector后，优先执行aware接口方法，为了拿到某bean，然后在selector的接口方法里使用
 						ParserStrategyUtils.invokeAwareMethods(
 								selector, this.environment, this.resourceLoader, this.registry);
 						if (this.deferredImportSelectors != null && selector instanceof DeferredImportSelector) {
@@ -667,8 +675,10 @@ class ConfigurationClassParser {
 						// Candidate class is an ImportBeanDefinitionRegistrar ->
 						// delegate to it to register additional bean definitions
 						Class<?> candidateClass = candidate.loadClass();
+						//反射实例化这个registrar实现类
 						ImportBeanDefinitionRegistrar registrar =
 								BeanUtils.instantiateClass(candidateClass, ImportBeanDefinitionRegistrar.class);
+						// 实例化了registrar后，优先执行aware接口方法，为了拿到某bean，然后在selector的接口方法里使用
 						ParserStrategyUtils.invokeAwareMethods(
 								registrar, this.environment, this.resourceLoader, this.registry);
 						//添加到一个list当中和importselector不同

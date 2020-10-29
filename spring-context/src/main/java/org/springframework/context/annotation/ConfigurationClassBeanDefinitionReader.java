@@ -148,7 +148,7 @@ class ConfigurationClassBeanDefinitionReader {
 		 //xml
 		loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
 
-		//注册Registrar
+		//执行ImportBeanDefinitionRegistrar 的接口方法
 		loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
 	}
 

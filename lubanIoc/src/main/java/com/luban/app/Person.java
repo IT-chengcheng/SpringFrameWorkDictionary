@@ -4,26 +4,28 @@ import com.luban.anno.EanbleLuabn;
 import com.luban.dao.Dao;
 import com.luban.dao.IndexDao;
 import com.luban.dao.IndexDao1;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 @Component
-public class Person {
+public class Person implements FactoryBean{
 
 
 
-	//@Autowired
-	Dog dao;
 
-	public Dog getDao() {
-		System.out.println("get 方法");
-		return dao;
+
+	@Nullable
+	@Override
+	public Object getObject() throws Exception {
+		return new Dog();
 	}
 
-	@Autowired
-	public void ewewe(Dog dao) {
-		System.out.println("set 方法");
-		this.dao = dao;
+	@Nullable
+	@Override
+	public Class<?> getObjectType() {
+		return Dog.class;
 	}
 }

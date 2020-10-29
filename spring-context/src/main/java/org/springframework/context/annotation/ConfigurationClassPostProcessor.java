@@ -264,7 +264,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	 * {@link Configuration} classes.
 	 */
 	public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
-		//定义一个list存放app 提供的bd（项目当中提供了@Compent）
+		//定义一个list存放app 提供的bd（项目当中提供了@Component）
 		List<BeanDefinitionHolder> configCandidates = new ArrayList<>();
 		//获取容器中注册的所有bd名字
 		//7个，这个registry 就是 DefaultListableBeanFactory
@@ -365,7 +365,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			 * 因为ImportBeanDefinitionRegistrar在扫描出来的时候已经被添加到一个list当中去了
 			 */
 
-			//bd 到 map 除却普通
+			//bd 到 map 除却普通 ，里面执行了ImportBeanDefinitionRegistrar 的接口方法
 			this.reader.loadBeanDefinitions(configClasses);
 			alreadyParsed.addAll(configClasses);
 
