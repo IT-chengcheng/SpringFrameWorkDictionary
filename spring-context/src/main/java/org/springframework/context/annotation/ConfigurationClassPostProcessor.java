@@ -120,13 +120,15 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	private boolean localBeanNameGeneratorSet = false;
 
 	/* Using short class names as default bean names */
+	/* AnnotationBeanNameGenerator里面的代码很简单，就是生成bean的名字*/
 	private BeanNameGenerator componentScanBeanNameGenerator = new AnnotationBeanNameGenerator();
 
 	/* Using fully qualified class names as default bean names */
+	/*ImportSelect接口生成的类的名字，用类的全名*/
 	private BeanNameGenerator importBeanNameGenerator = new AnnotationBeanNameGenerator() {
 		@Override
 		protected String buildDefaultBeanName(BeanDefinition definition) {
-			String beanClassName = definition.getBeanClassName();
+			String beanClassName = definition.getBeanClassName(); //类的全名 com.oad.Person
 			Assert.state(beanClassName != null, "No bean class name set");
 			return beanClassName;
 		}
@@ -208,6 +210,8 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 
 	@Override
 	public void setBeanClassLoader(ClassLoader beanClassLoader) {
+		// 什么时候调用的这个方法？：在这个类实例化的时候调用的。doGetBean（"类名"）时，
+		// 这虽然是个BeanFactoryPostProcessor,但是他也实现了aware接口，所以doGetBean时，实例了这个类，也执行了aware接口方法
 		this.beanClassLoader = beanClassLoader;
 		if (!this.setMetadataReaderFactoryCalled) {
 			this.metadataReaderFactory = new CachingMetadataReaderFactory(beanClassLoader);
@@ -264,7 +268,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	 * {@link Configuration} classes.
 	 */
 	public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
-		//定义一个list存放app 提供的bd（项目当中提供了@Component）
+		//存放带有
 		List<BeanDefinitionHolder> configCandidates = new ArrayList<>();
 		//获取容器中注册的所有bd名字
 		//7个，这个registry 就是 DefaultListableBeanFactory
@@ -284,20 +288,28 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 					logger.debug("Bean definition has already been processed as a configuration class: " + beanDef);
 				}
 			}
-			//判断是否是Configuration类，如果加了Configuration下面的这几个注解就不再判断了
-			// 还有  add(Component.class.getName());
-			//		candidateIndicators.add(ComponentScan.class.getName());
-			//		candidateIndicators.add(Import.class.getName());
-			//		candidateIndicators.add(ImportResource.class.getName());
-			//beanDef == appconfig
 			else if (ConfigurationClassUtils.checkConfigurationClassCandidate(beanDef, this.metadataReaderFactory)) {
+				/**
+				 * true 进入这个方法的前提是，该类加了这些注解：@Conifgure @Component,@ComponentScan,@Import,@ImportResource
+				 * 或者类没加任何注解，但是呢里面有个方法加了@Bean注解。
+				 * 但是只有加了@Configure注解的类 才会将  "configurationClass":"full"，意识是个全注解类
+				 * 其余 "configurationClass":"lite"
+				 */
 				//BeanDefinitionHolder 也可以看成一个数据结构,也只是为了方便传值
 				configCandidates.add(new BeanDefinitionHolder(beanDef, beanName));
 			}
 		}
 
 		// Return immediately if no @Configuration classes were found
-		if (configCandidates.isEmpty()) {//如果没有加@Configuration注解的类，那下面的逻辑都不执行了，下面的扫描包也就不执行了
+		if (configCandidates.isEmpty()) {
+			/**
+			 * configCandidates里面值是怎么来的？从bd-Map中来的，但是还需要满足一些条件才行
+			 * 1、首先bd-Map里面的数据是spring刚初始化的时候，内部加了6个，再加上程序员手动调用register方法注册进去
+			 * 2、bd-map里面的数据，必须要满足上面那堆注解的过滤，才会加入到configCandidates中
+			 * 也就是说如果程序员定义了Person，并且加了注解@Component，并且调用了register（）注册，那就会进入这个数组
+			 * 也就是说configCandidates这个数组里可不一定都是@Configure注解的类。只不过大部分情况只有一个加了@Configure注解的类
+			 * 其他类通过扫描方式操作
+			 */
 			return;
 		}
 
@@ -320,6 +332,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 				BeanNameGenerator generator = (BeanNameGenerator) sbr.getSingleton(CONFIGURATION_BEAN_NAME_GENERATOR);
 				//SingletonBeanRegistry中有id为 org.springframework.context.annotation.internalConfigurationBeanNameGenerator
 				//如果有则利用他的，否则则是spring默认的
+				// 个人觉得这里的意思是可以自定义名字生成器，如果没有自定义，就用spring默认的
 				if (generator != null) {
 					this.componentScanBeanNameGenerator = generator;
 					this.importBeanNameGenerator = generator;
@@ -332,18 +345,38 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		}
 
 		// Parse each @Configuration class
-		//实例化ConfigurationClassParser 为了解析各个配置类
+		/**
+		 * ConfigurationClassParser 这个类是主要解析类，这个类里面有很多重要属性，比如
+		 * private final BeanDefinitionRegistry registry;  将外面的registry传入，进行赋值
+		 * private final ComponentScanAnnotationParser componentScanParser; 真正的扫描类，在构造方法中被初始化
+		 private final Map<ConfigurationClass, ConfigurationClass> configurationClasses = new LinkedHashMap<>(); 存放configClasss
+		 ConfigurationClass是个类，里面有如下属性：
+		 Set<BeanMethod> beanMethods
+		 Map<ImportBeanDefinitionRegistrar, AnnotationMetadata> importBeanDefinitionRegistrars
+		 Map<String, Class<? extends BeanDefinitionReader>> importedResources  private String beanName;
+		 */
 		ConfigurationClassParser parser = new ConfigurationClassParser(
 				this.metadataReaderFactory, this.problemReporter, this.environment,
 				this.resourceLoader, this.componentScanBeanNameGenerator, registry);
 
+		/**
+		 * ConfigurationClassPostProcessor 实现了接口 BeanDefinitionRegistryPostProcessor  -> postProcessBeanDefinitionRegistry()
+		 * 在当前这个方法里实例化局部变量 ConfigurationClassParser parser，通过构造方法传入很多参数，尤其是registry
+		 * ConfigurationClassParser 有成员变量 ComponentScanAnnotationParser componentScanParser   有方法 parse（）
+		 * 在这个parse（）方法里  新建局部变量 new ClassPathBeanDefinitionScanner 并且传入 registry等
+		 * 调用了doSan（），方法内部调用   findCandidateComponents(basePackage); 这个方法就是真正将包名换成文件路径，
+		 * 得到一个Resource[] resources，里面放的就是所有的类的文件的真实路径，然后for循环，通过反射将文件名换成类名，
+		 * 然后变成bd
+		 */
 		//实例化2个set,candidates用于将之前加入的configCandidates进行去重
-		//因为可能有多个配置类重复了
+		//因为可能有多个配置类重复了，放入Set中，set会自动去重
 		//alreadyParsed用于判断是否处理过
 		Set<BeanDefinitionHolder> candidates = new LinkedHashSet<>(configCandidates);
 		Set<ConfigurationClass> alreadyParsed = new HashSet<>(configCandidates.size());
 		do {
 			//-->>startScan6   candidates就是带有@Configure注解的类的数组
+			// 这时就进入了 ConfigurationClassParser类里面，进行parse（）了，这个类里面有个很很重要的map就是
+			// Map<ConfigurationClass, ConfigurationClass> configurationClasses
 			parser.parse(candidates);
 			parser.validate();
 			//map.keyset

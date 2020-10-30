@@ -250,7 +250,7 @@ public class AnnotatedBeanDefinitionReader {
 		 */
 		abd.setScope(scopeMetadata.getScopeName());
 		/**
-		 * 生成类的名字通过beanNameGenerator记得布置过一个作业
+		 * 生成类的名字通过beanNameGenerator记
 		 */
 		String beanName = (name != null ? name : this.beanNameGenerator.generateBeanName(abd, this.registry));
 		/**
@@ -282,7 +282,6 @@ public class AnnotatedBeanDefinitionReader {
 				}
 				else {
 					//如果使用了除@Primary和@Lazy以外的其他注解，则为该Bean添加一个根据名字自动装配的限定符
-					//这里难以理解，后面会详细介绍
 					abd.addQualifier(new AutowireCandidateQualifier(qualifier));
 				}
 			}
@@ -299,8 +298,6 @@ public class AnnotatedBeanDefinitionReader {
 
 		/**
 		 * ScopedProxyMode 这个知识点比较复杂，需要结合web去理解
-		 * 可以暂时放一下，等说道springmvc的时候再说
-		 * 或者看情况现在说也是一样的
 		 */
 		definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
 

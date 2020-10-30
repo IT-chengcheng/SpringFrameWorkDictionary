@@ -174,11 +174,14 @@ class ConfigurationClassParser {
 					//但是是这里解析，只是不put而已
 					//-->>startScan6
 					parse(((AnnotatedBeanDefinition) bd).getMetadata(), holder.getBeanName());
+					// 这个getMetadata()就是  StandardAnnotationMetadata
 				}
 				else if (bd instanceof AbstractBeanDefinition && ((AbstractBeanDefinition) bd).hasBeanClass()) {
+					// 暂时还没碰到进入这个方法的时候
 					parse(((AbstractBeanDefinition) bd).getBeanClass(), holder.getBeanName());
 				}
 				else {
+					 // 暂时还没碰到进入这个方法的时候
 					parse(bd.getBeanClassName(), holder.getBeanName());
 				}
 			}
@@ -194,7 +197,7 @@ class ConfigurationClassParser {
 		//处理延迟加载的importSelect？为什么要延迟加载，估计就是为了延迟吧
 		processDeferredImportSelectors();
 	}
-
+	// 递归调用
 	protected final void parse(@Nullable String className, String beanName) throws IOException {
 		Assert.notNull(className, "No bean class name for configuration class bean definition");
 		MetadataReader reader = this.metadataReaderFactory.getMetadataReader(className);
@@ -206,6 +209,8 @@ class ConfigurationClassParser {
 	}
 
 	protected final void parse(AnnotationMetadata metadata, String beanName) throws IOException {
+		// 这时，又一个类出场了，就是 ConfigurationClass，在这个当前类有个map保存了这个ConfigurationClass
+		//  Map<ConfigurationClass, ConfigurationClass> configurationClasses
 		processConfigurationClass(new ConfigurationClass(metadata, beanName));
 	}
 
@@ -231,6 +236,7 @@ class ConfigurationClassParser {
 
 		// 处理Imported 的情况
 		//就是当前这个注解类有没有被别的类import
+		// this.configurationClasses是个map，当前类的一个成员变量
 		ConfigurationClass existingClass = this.configurationClasses.get(configClass);
 		if (existingClass != null) {
 			if (configClass.isImported()) {
@@ -289,6 +295,8 @@ class ConfigurationClassParser {
 		}
 
 		// Process any @ComponentScan annotations
+		// 通过传入注解的类名，获取sourceClasss.getMetadata()（其实就是当前config类的）的注解属性
+		// sourceClass是对config的包装，他俩的metada是一样的，都是StandardAnnotationMetadata，他里面有当前config的所有的注解
 		Set<AnnotationAttributes> componentScans = AnnotationConfigUtils.attributesForRepeatable(
 				sourceClass.getMetadata(), ComponentScans.class, ComponentScan.class);
 		if (!componentScans.isEmpty() &&

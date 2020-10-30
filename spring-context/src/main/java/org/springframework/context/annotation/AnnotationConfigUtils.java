@@ -322,6 +322,7 @@ public class AnnotationConfigUtils {
 		Set<AnnotationAttributes> result = new LinkedHashSet<>();
 
 		// Direct annotation present?
+		// metadata 是StandardAnnotationMetadata，通过传入注解的类名，获取bd的注解的属性map
 		addAttributesIfNotNull(result, metadata.getAnnotationAttributes(annotationClassName, false));
 
 		// Container annotation present?
@@ -332,8 +333,8 @@ public class AnnotationConfigUtils {
 			}
 		}
 
-		// Return merged result
-		return Collections.unmodifiableSet(result);
+
+		return  Collections.unmodifiableSet(result);
 	}
 
 	private static void addAttributesIfNotNull(

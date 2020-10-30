@@ -69,6 +69,7 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
 	@Override
 	public String generateBeanName(BeanDefinition definition, BeanDefinitionRegistry registry) {
 		if (definition instanceof AnnotatedBeanDefinition) {
+			// 先获取注解的value值，如果程序员没写，那就走最下面的方法，也就是默认将类的首字母小写
 			String beanName = determineBeanNameFromAnnotation((AnnotatedBeanDefinition) definition);
 			if (StringUtils.hasText(beanName)) {
 				// Explicit bean name found.
@@ -76,6 +77,7 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
 			}
 		}
 		// Fallback: generate a unique default bean name.
+		// 将类的首字母小写，比如 Person -> person .这是JDK的方法
 		return buildDefaultBeanName(definition, registry);
 	}
 
@@ -152,6 +154,8 @@ public class AnnotationBeanNameGenerator implements BeanNameGenerator {
 		String beanClassName = definition.getBeanClassName();
 		Assert.state(beanClassName != null, "No bean class name set");
 		String shortClassName = ClassUtils.getShortName(beanClassName);
+
+		// 将类的首字母小写，比如 Person -> person .这是JDK的方法
 		return Introspector.decapitalize(shortClassName);
 	}
 

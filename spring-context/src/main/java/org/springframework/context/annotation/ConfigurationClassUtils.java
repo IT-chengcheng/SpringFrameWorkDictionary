@@ -97,6 +97,7 @@ abstract class ConfigurationClassUtils {
 			// since we possibly can't even load the class file for this Class.
 			//如果BeanDefinition 是 AbstractBeanDefinition的实例,并且beanDef 有 beanClass 属性存在
 			//则实例化StandardAnnotationMetadata
+			// 刚初始化的时候，sping默认的bd，以及加了@configure的bd都会进入到这个判断
 			Class<?> beanClass = ((AbstractBeanDefinition) beanDef).getBeanClass();
 			metadata = new StandardAnnotationMetadata(beanClass, true);
 		}
@@ -115,23 +116,16 @@ abstract class ConfigurationClassUtils {
 
 		//判断当前这个bd中存在的类是不是加了@Configruation注解
 		//如果存在则spring认为他是一个全注解的类
-		if (isFullConfigurationCandidate(metadata)) {
-			//如果存在Configuration 注解,则为BeanDefinition 设置configurationClass属性为full
+		if (isFullConfigurationCandidate(metadata)) {//"configurationClass":"full"
+			//如果存在@Configuration 注解,则为BeanDefinition 设置configurationClass属性为full
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_FULL);
 		}
-
-		/**
-		 * 如果AnnotationMetadata 中有Component,ComponentScan,Import,ImportResource 注解中的任意一个,或者存在 被
-		 * @bean 注解的方法,则返回true.则设置configurationClass属性为lite
-		 *
-		 * 判断是否加了以下注解，摘录isLiteConfigurationCandidate的源码
-		candidateIndicators.add(Component.class.getName());
-		candidateIndicators.add(ComponentScan.class.getName());
-		candidateIndicators.add(Import.class.getName());
-		candidateIndicators.add(ImportResource.class.getName());
-		如果不存在Configuration注解，spring则认为是一个部分注解类
-		 */
-		else if (isLiteConfigurationCandidate(metadata)) {
+		else if (isLiteConfigurationCandidate(metadata)) {// "configurationClass":"lite"
+			/**
+			 * 如果AnnotationMetadata 中有Component,ComponentScan,Import,ImportResource 注解中的任意一个,或者存在 被
+			 * @bean 注解的方法,则返回true.则设置configurationClass属性为lite
+			如果不存在Configuration注解，spring则认为是一个部分注解类
+			 */
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_LITE);
 		}
 		else {
@@ -185,13 +179,15 @@ abstract class ConfigurationClassUtils {
 
 		// Any of the typical annotations found?
 		for (String indicator : candidateIndicators) {
+			// @Component @ComponentScan @Import @ImportResource
+
 			if (metadata.isAnnotated(indicator)) {
 				return true;
 			}
 		}
 
 		// Finally, let's look for @Bean methods...
-		try {
+		try { // 有没有 被@Bean注解的方法
 			return metadata.hasAnnotatedMethods(Bean.class.getName());
 		}
 		catch (Throwable ex) {
