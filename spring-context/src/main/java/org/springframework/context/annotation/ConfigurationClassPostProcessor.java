@@ -374,8 +374,8 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		Set<BeanDefinitionHolder> candidates = new LinkedHashSet<>(configCandidates);
 		Set<ConfigurationClass> alreadyParsed = new HashSet<>(configCandidates.size());
 		do {
-			//-->>startScan6   candidates就是带有@Configure注解的类的数组
-			// 这时就进入了 ConfigurationClassParser类里面，进行parse（）了，这个类里面有个很很重要的map就是
+			//-->>startScan6
+			// 这时就进入了 ConfigurationClassParser类里面，进行parse（）了，这个类里面有个很重要的map就是
 			// Map<ConfigurationClass, ConfigurationClass> configurationClasses
 			parser.parse(candidates);
 			parser.validate();

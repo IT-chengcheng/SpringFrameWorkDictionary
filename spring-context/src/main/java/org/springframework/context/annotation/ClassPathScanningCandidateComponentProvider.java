@@ -422,11 +422,11 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 		try {
 			String packageSearchPath = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX +
 					resolveBasePackage(basePackage) + '/' + this.resourcePattern; // resourcePattern = "**/*.class"
-			//asm 读取class文件，类似于把包名下所有的文件都读出来了放到数组中
-			//-->>startScan12
+			//asm 读取class文件，
+			//-->>startScan12  这里就是拿到所有.class文件的路径，放到数组里,注意是所有的.class文件！
 			Resource[] resources = getResourcePatternResolver().getResources(packageSearchPath);
-			// F:\鲁班二期课件\Spring\带注释的源码spring-子路\spring-framework-5.0.x\lubanIoc\out\production\classes\com\luban\anno\EanbleLuabn.class
-			// F:\鲁班二期课件\Spring\带注释的源码spring-子路\spring-framework-5.0.x\lubanIoc\out\production\classes\com\luban\app\Car.class
+			// F:\xx\Spring\xx\spring-framework-5.0.x\lubanIoc\out\production\classes\com\luban\anno\EanbleLuabn.class
+			// F:\xx\Spring\xx\spring-framework-5.0.x\lubanIoc\out\production\classes\com\luban\app\Car.class
 
 			boolean traceEnabled = logger.isTraceEnabled();
 			boolean debugEnabled = logger.isDebugEnabled();
@@ -436,18 +436,18 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 				}
 				if (resource.isReadable()) {
 					try {
-						// 这一步做的就是读取了类文件的路径，或者说就是拿到了类文件的文件名，放到metadataReader中
-						// 类似于file.getname().  类的文件名，其实就是类名
+						// 这一步做的就是读取了.class文件的路径，或者说就是拿到了.class文件的文件名，放到metadataReader中
 						MetadataReader metadataReader = getMetadataReaderFactory().getMetadataReader(resource);
 						if (isCandidateComponent(metadataReader)) {
+							// 这个判断的是：是否在excludeFilters或者includeFilters
+							// 也就是说上面的扫描文件不会做任何过滤，都扫出来后，到这里进行一个个过滤
 							ScannedGenericBeanDefinition sbd = new ScannedGenericBeanDefinition(metadataReader);
+							// 扫描出来的类的bd是 ScannedGenericBeanDefinition extends GenericBeanDefinition implements AnnotatedBeanDefinition
+							// 手动注册的bd，以及spring内部的bd，是AnnotatedGenericBeanDefinition
 							sbd.setResource(resource);
 							sbd.setSource(resource);
-							//System.out.println("file bean name:"+sbd.getBeanClassName());
-							if (sbd.getBeanClassName().equals("com.luban.app.Animal")){
-								System.out.println("fas");
-							}
 							if (isCandidateComponent(sbd)) {
+								// 只要不是接口，不是抽象类，就能返回true。这样看来这个扫描会把除了接口和抽象类的类都扫出来
 								if (debugEnabled) {
 									logger.debug("Identified candidate component class: " + resource);
 								}
@@ -508,7 +508,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 				return false;
 			}
 		}
-		for (TypeFilter tf : this.includeFilters) {
+		for (TypeFilter tf : this.includeFilters) {// 默认情况下 includeFilters里面只有@Component注解
 			if (tf.match(metadataReader, getMetadataReaderFactory())) {
 				return isConditionMatch(metadataReader);
 			}
@@ -540,7 +540,8 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	 */
 	protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
 		AnnotationMetadata metadata = beanDefinition.getMetadata();
-		//System.out.println("isConcrete:"+metadata.isConcrete());
+
+		// metadata.isConcrete() 只要不是接口interface，或者不是抽象类abstract，就返回true
 		return (metadata.isIndependent() && (metadata.isConcrete() ||
 				(metadata.isAbstract() && metadata.hasAnnotatedMethods(Lookup.class.getName()))));
 	}

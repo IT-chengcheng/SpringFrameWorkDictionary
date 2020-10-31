@@ -282,6 +282,11 @@ class ConfigurationClassParser {
 		processMemberClasses(configClass, sourceClass);
 
 		// Process any @PropertySource annotations
+		// 就是将property，或者yml文件导入到spring容器中，这样可以通过@value获取
+		// AnnotationConfigUtils.attributesForRepeatable(),就是传入一个类和一个注解.Class，获取该类的在该注解下的属性
+		// 仔细观察，注意传入了两个注解，一个带s，一个不带，详见@Repeatable的用法
+		// public class AnnotationAttributes extends LinkedHashMap,所以propertySource就是个map，
+		// 因为注解里有很多属性，通过这个方法封装到map中
 		for (AnnotationAttributes propertySource : AnnotationConfigUtils.attributesForRepeatable(
 				sourceClass.getMetadata(), PropertySources.class,
 				org.springframework.context.annotation.PropertySource.class)) {
@@ -297,17 +302,18 @@ class ConfigurationClassParser {
 		// Process any @ComponentScan annotations
 		// 通过传入注解的类名，获取sourceClasss.getMetadata()（其实就是当前config类的）的注解属性
 		// sourceClass是对config的包装，他俩的metada是一样的，都是StandardAnnotationMetadata，他里面有当前config的所有的注解
+		// 仔细观察，注意传入了两个注解，一个带s，一个不带，详见@Repeatable的用法
+		// AnnotationAttributes是个map，里面有个属性useDefaultFilters默认是true，因为@ComponentScan注解里面默认是true
 		Set<AnnotationAttributes> componentScans = AnnotationConfigUtils.attributesForRepeatable(
 				sourceClass.getMetadata(), ComponentScans.class, ComponentScan.class);
 		if (!componentScans.isEmpty() &&
 				!this.conditionEvaluator.shouldSkip(sourceClass.getMetadata(), ConfigurationPhase.REGISTER_BEAN)) {
 			for (AnnotationAttributes componentScan : componentScans) {
 				// The config class is annotated with @ComponentScan -> perform the scan immediately
-				//扫描普通类=componentScan=com.luban
-				//这里扫描出来所有@Component
-				//并且把扫描的出来的普通bean放到map当中
+				//经过下面这个方法后，拿到的一个bd集合，里面存放的是所有符合条件的bd（就是经过过滤后的），而且bd的大部分属性都已经赋值了
+				//比如scope primary  lazy 等等，而且也将这些bd放入了beanfactory的beanDefinitionMap中  “person":bd, "dog":bd
 				// 真正开始扫描程序员加了注解的类
-				//-->>startScan8
+				//-->>startScan8  进入 ComponentScanAnnotationParser
 				Set<BeanDefinitionHolder> scannedBeanDefinitions =
 						this.componentScanParser.parse(componentScan, sourceClass.getMetadata().getClassName());
 				// Check the set of scanned definitions for any further config classes and parse recursively if needed
@@ -479,6 +485,7 @@ class ConfigurationClassParser {
 	 * @throws IOException if loading a property source failed
 	 */
 	private void processPropertySource(AnnotationAttributes propertySource) throws IOException {
+		// @PropertySource(value = {"classpath:test.properties"})
 		String name = propertySource.getString("name");
 		if (!StringUtils.hasLength(name)) {
 			name = null;

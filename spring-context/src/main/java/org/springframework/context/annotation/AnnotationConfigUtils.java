@@ -318,7 +318,8 @@ public class AnnotationConfigUtils {
 	@SuppressWarnings("unchecked")
 	static Set<AnnotationAttributes> attributesForRepeatable(
 			AnnotationMetadata metadata, String containerClassName, String annotationClassName) {
-
+		// containerClassName  -> ComponentScans 带s
+		// annotationClassName  -> ComponentScan 不带s
 		Set<AnnotationAttributes> result = new LinkedHashSet<>();
 
 		// Direct annotation present?

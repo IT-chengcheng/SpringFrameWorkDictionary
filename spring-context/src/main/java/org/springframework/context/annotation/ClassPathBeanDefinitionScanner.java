@@ -162,8 +162,10 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
 		this.registry = registry;
 
-		if (useDefaultFilters) {
+		if (useDefaultFilters) {// 默认是ture，点进入看这个register
 			registerDefaultFilters();
+			//
+
 		}
 		setEnvironment(environment);
 		setResourceLoader(resourceLoader);
@@ -274,36 +276,47 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 		Assert.notEmpty(basePackages, "At least one base package must be specified");
 		Set<BeanDefinitionHolder> beanDefinitions = new LinkedHashSet<>();
 		for (String basePackage : basePackages) {
-			//扫描basePackage路径下的java文件
+			//扫描basePackage路径下的.class文件
 			//符合条件的并把它转成BeanDefinition类型
-			//-->>startScan10
+			/**
+			 * 一、会将所有的.class文件的路径都读取出来  二、循环，挨个通过反射转发为实体类，进行第一层过滤 includeFilter，excludeFilter
+			 * 三、第二层过滤，将接口interface，抽象类abstract都过滤掉
+			 * 四、如果componentScan.getBoolean("useDefaultFilters")为true（默认就是true，因为@componentScan里面就是ture，可以点进去看看）
+			 * 那扫描出来的类就是所有的加了@Component注解的类，除了接口和抽象类（过滤掉了）
+			 * 五、如果操作了这三个值，那就是另一回事了，useDefaultFilters，includeFilter，excludeFilter 因为需要各种过滤。
+			 * 注意useDefaultFilters默认为ture，-> includeFilters.add(new AnnotationTypeFilter(Component.class));
+			 */
+			//-->>startScan10   扫描出来的 bd 都是 ScannedGenericBeanDefinition
 			Set<BeanDefinition> candidates = findCandidateComponents(basePackage);
+			// useDefaultFilters=true的情况下，拿到所有的加了@Component注解的类，也有@Controller，@service，@resposty，除了接口和抽象类（过滤掉了），
 
-
-			// 将一个个bd放入到beanfactory的map中
+			// 给bd的属性赋值，然后将完整的bd放入到beanfactory的beanDefinitionMap中
 			for (BeanDefinition candidate : candidates) {
 				//解析scope属性
 				ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(candidate);
 				candidate.setScope(scopeMetadata.getScopeName());
+				// 先获取注解里面的值，没有的话，使用类名，首字母小写：dog，person
+				// 虽然传进去了this.registry （DeafultListableBeanFactory）但是压根没使用到
 				String beanName = this.beanNameGenerator.generateBeanName(candidate, this.registry);
+				// beanName 就是首字母小写  比如:dog,person
 				if (candidate instanceof AbstractBeanDefinition) {
-					//如果这个类是AbstractBeanDefinition的子类
+					//candidate是ScannedGenericBeanDefinition，是它的子类，所以会进这个判断
 					//则为他设置默认值，比如lazy，init destory
 					postProcessBeanDefinition((AbstractBeanDefinition) candidate, beanName);
 				}
 				if (candidate instanceof AnnotatedBeanDefinition) {
-					//检查并且处理常用的注解
-					//这里的处理主要是指把常用注解的值设置到AnnotatedBeanDefinition当中
-					//当前前提是这个类必须是AnnotatedBeanDefinition类型的，说白了就是加了注解的类
+					//candidate是ScannedGenericBeanDefinition，实现了这个接口，所以会进这个判断
+					//检查并且处理常用的注解 Lazy Primary DependsOn 等
+					//根据有没有这几个注解，设置AnnotatedBeanDefinition的属性值，比如  abd.setPrimary(true);
 					AnnotationConfigUtils.processCommonDefinitionAnnotations((AnnotatedBeanDefinition) candidate);
 				}
-				if (checkCandidate(beanName, candidate)) {
+				if (checkCandidate(beanName, candidate)) {// 看看有没有重名
 					BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(candidate, beanName);
 					definitionHolder =
 							AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
 					beanDefinitions.add(definitionHolder);
 					//加入到beanfactory的map当中
-					//-->>startScan11
+					//-->>startScan11      this.registry = DeafultListableBeanFactory
 					registerBeanDefinition(definitionHolder, this.registry);
 				}
 			}

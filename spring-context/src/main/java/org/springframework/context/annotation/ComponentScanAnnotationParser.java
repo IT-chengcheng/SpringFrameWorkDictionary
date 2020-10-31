@@ -74,7 +74,7 @@ class ComponentScanAnnotationParser {
 
 
 	public Set<BeanDefinitionHolder> parse(AnnotationAttributes componentScan, final String declaringClass) {
-
+        // componentScan就是个map，useDefaultFilters默认是true，进入ClassPathBeanDefinitionScanner构造方法看看
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(this.registry,
 				componentScan.getBoolean("useDefaultFilters"), this.environment, this.resourceLoader);
 
@@ -84,7 +84,7 @@ class ComponentScanAnnotationParser {
 		scanner.setBeanNameGenerator(useInheritedGenerator ? this.beanNameGenerator :
 				BeanUtils.instantiateClass(generatorClass));
 
-		//web当中在来讲
+		//SpringMVC 用的到，暂时不用看
 		ScopedProxyMode scopedProxyMode = componentScan.getEnum("scopedProxy");
 		if (scopedProxyMode != ScopedProxyMode.DEFAULT) {
 			scanner.setScopedProxyMode(scopedProxyMode);
@@ -96,19 +96,21 @@ class ComponentScanAnnotationParser {
 
 		scanner.setResourcePattern(componentScan.getString("resourcePattern"));
 
-		//遍历当中的过滤
+		//只扫描指定类型的类，调用的是ClassPathBeanDefinitionScanner 实例的 scanner.addIncludeFilter（），可以用这个类自定义扫描
+		// @ComponentScan(value = "com.annotation",useDefaultFilters = false,includeFilters = {@ComponentScan.Filter(type = FilterType.ANNOTATION,classes = {Controller.class,ControllerAdvice.class})})
 		for (AnnotationAttributes filter : componentScan.getAnnotationArray("includeFilters")) {
 			for (TypeFilter typeFilter : typeFiltersFor(filter)) {
 				scanner.addIncludeFilter(typeFilter);
 			}
 		}
+		//排除不需要扫描的类
 		for (AnnotationAttributes filter : componentScan.getAnnotationArray("excludeFilters")) {
 			for (TypeFilter typeFilter : typeFiltersFor(filter)) {
 				scanner.addExcludeFilter(typeFilter);
 			}
 		}
 
-		//默认false
+		//默认false 懒加载
 		boolean lazyInit = componentScan.getBoolean("lazyInit");
 		if (lazyInit) {
 			scanner.getBeanDefinitionDefaults().setLazyInit(true);
@@ -137,6 +139,10 @@ class ComponentScanAnnotationParser {
 
 
          //-->>startScan9
+		/**
+		 * 经过下面这个方法后，拿到的一个bd集合，里面存放的是所有符合条件的bd（就是经过过滤后的），而且bd的大部分属性都已经赋值了
+		 * 比如scope primary  lazy 等等，而且也将这些bd放入了beanfactory的beanDefinitionMap中  “person":bd, "dog":bd
+		 */
 		return scanner.doScan(StringUtils.toStringArray(basePackages));
 	}
 
