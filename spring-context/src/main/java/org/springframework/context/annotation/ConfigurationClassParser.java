@@ -197,10 +197,11 @@ class ConfigurationClassParser {
 		//处理延迟加载的importSelect？为什么要延迟加载，估计就是为了延迟吧
 		processDeferredImportSelectors();
 	}
-	// 递归调用
+	// 递归调用，才走这个parse（）。就是已经扫描完了全部的类了，然后再判断每个类里面的注解有没有加扫描的
 	protected final void parse(@Nullable String className, String beanName) throws IOException {
 		Assert.notNull(className, "No bean class name for configuration class bean definition");
 		MetadataReader reader = this.metadataReaderFactory.getMetadataReader(className);
+		// 传入reader的目的就是为了给 configuration里面的metadata赋值 -> this.metadata = metadataReader.getAnnotationMetadata();
 		processConfigurationClass(new ConfigurationClass(reader, beanName));
 	}
 
@@ -208,6 +209,9 @@ class ConfigurationClassParser {
 		processConfigurationClass(new ConfigurationClass(clazz, beanName));
 	}
 
+	// 这个不是递归的的parse（）方法，上面那个才是。这个方法在哪里触发调用的呢？
+	// 方法参数值，都是手动注册的bd或者spring的bd，所以就是最最最最开始触发扫描时触发的，而上面的那个paser（）是扫描完了，
+	// 又继续递归调用的，注意两个方法的传参
 	protected final void parse(AnnotationMetadata metadata, String beanName) throws IOException {
 		// 这时，又一个类出场了，就是 ConfigurationClass，在这个当前类有个map保存了这个ConfigurationClass
 		//  Map<ConfigurationClass, ConfigurationClass> configurationClasses
@@ -255,6 +259,7 @@ class ConfigurationClassParser {
 		}
 
 		// Recursively process the configuration class and its superclass hierarchy.
+		// sourceClass就是一个包装，里面最主要的类还是metadata
 		SourceClass sourceClass = asSourceClass(configClass);
 		do {
 			//-->>startScan7
@@ -287,6 +292,7 @@ class ConfigurationClassParser {
 		// 仔细观察，注意传入了两个注解，一个带s，一个不带，详见@Repeatable的用法
 		// public class AnnotationAttributes extends LinkedHashMap,所以propertySource就是个map，
 		// 因为注解里有很多属性，通过这个方法封装到map中
+		// 可能会加多次@PropertySource注解，所以会得到一个 Set<AnnotationAttributes>
 		for (AnnotationAttributes propertySource : AnnotationConfigUtils.attributesForRepeatable(
 				sourceClass.getMetadata(), PropertySources.class,
 				org.springframework.context.annotation.PropertySource.class)) {
@@ -300,10 +306,12 @@ class ConfigurationClassParser {
 		}
 
 		// Process any @ComponentScan annotations
-		// 通过传入注解的类名，获取sourceClasss.getMetadata()（其实就是当前config类的）的注解属性
-		// sourceClass是对config的包装，他俩的metada是一样的，都是StandardAnnotationMetadata，他里面有当前config的所有的注解
+		// 通过传入注解的类名，获取sourceClasss.getMetadata()（其实就是当前类的）的注解属性
+		// sourceClass是对config的包装，他俩的metada是一样的，StandardAnnotationMetadata或者AnnotationMetadataReadingVisitor，
+		// 他里面有当前类的所有的注解
 		// 仔细观察，注意传入了两个注解，一个带s，一个不带，详见@Repeatable的用法
 		// AnnotationAttributes是个map，里面有个属性useDefaultFilters默认是true，因为@ComponentScan注解里面默认是true
+		// 可能会加多次@ComponentScan注解，所以会得到一个 Set<AnnotationAttributes>
 		Set<AnnotationAttributes> componentScans = AnnotationConfigUtils.attributesForRepeatable(
 				sourceClass.getMetadata(), ComponentScans.class, ComponentScan.class);
 		if (!componentScans.isEmpty() &&
@@ -313,11 +321,14 @@ class ConfigurationClassParser {
 				//经过下面这个方法后，拿到的一个bd集合，里面存放的是所有符合条件的bd（就是经过过滤后的），而且bd的大部分属性都已经赋值了
 				//比如scope primary  lazy 等等，而且也将这些bd放入了beanfactory的beanDefinitionMap中  “person":bd, "dog":bd
 				// 真正开始扫描程序员加了注解的类
+				// 注意这是会反复的递归调用，因为扫描出A类，A类也注册到了bd-map中，然后呢再继续处理A类里面扫描包（如果有的话）
+				//处理完这个循环（就是A的扫描包也执行完了），下面的逻辑处理，比如A累的Import ImportResource等等，最上面的逻辑是处理PropertySources
+				// 也就是说 ：上面处理@PropertySources，中间扫描注册，下面处理Import ImportResource等等。
 				//-->>startScan8  进入 ComponentScanAnnotationParser
 				Set<BeanDefinitionHolder> scannedBeanDefinitions =
 						this.componentScanParser.parse(componentScan, sourceClass.getMetadata().getClassName());
 				// Check the set of scanned definitions for any further config classes and parse recursively if needed
-				//检查扫描出来的类当中是否还有configuration
+				//检查扫描出来的类当中是否还有configuration，Component,ComponentScan,Import,ImportResource
 				for (BeanDefinitionHolder holder : scannedBeanDefinitions) {
 					BeanDefinition bdCand = holder.getBeanDefinition().getOriginatingBeanDefinition();
 					if (bdCand == null) {
@@ -325,7 +336,14 @@ class ConfigurationClassParser {
 					}
 					//检查  todo
 					if (ConfigurationClassUtils.checkConfigurationClassCandidate(bdCand, this.metadataReaderFactory)) {
-						// 递归调用
+						/**
+						 * 如果AnnotationMetadata 中有Component,ComponentScan,Import,ImportResource 注解中的任意一个,或者存在 被
+						 * @bean 注解的方法,则返回true.则设置bd  configurationClass属性为lite
+						 * 如果有@Configuration 也返回true ，设置bd  configurationClass为full
+						 */
+						// 递归调用，经过这种递归调用后，beanfactory的map中就容纳了所有的该存在的bd
+						// 这个递归，不只让该类继续扫描，或者说不只是处理注解@ComponentScan，还处理当前类的其他的注解
+						// 比如上面的 @PropertySources 下面的 processImports（）  @ImportResource
 						parse(bdCand.getBeanClassName(), holder.getBeanName());
 					}
 				}
@@ -752,8 +770,10 @@ class ConfigurationClassParser {
 	private SourceClass asSourceClass(ConfigurationClass configurationClass) throws IOException {
 		AnnotationMetadata metadata = configurationClass.getMetadata();
 		if (metadata instanceof StandardAnnotationMetadata) {
+			// spring自己的，还有程序员手动注册的都是 StandardAnnotationMetadata
 			return asSourceClass(((StandardAnnotationMetadata) metadata).getIntrospectedClass());
 		}
+		// 扫描出来的metadata都是  ScannedGenericBeanDefinition
 		return asSourceClass(metadata.getClassName());
 	}
 
