@@ -351,26 +351,19 @@ class ConfigurationClassParser {
 		}
 
 		/**
-		 * 上面的代码就是扫描普通类----@Component
-		 * 并且放到了map当中
+		 * 上面的代码负责递归扫描，然后将扫描到的类放到bd-map中，有个很重要的判断 ConfigurationClassUtils.checkConfigurationClassCandidate(bdCand, this.metadataReaderFactory)
+		 * 能进这个判断，就是处理Component,ComponentScan,Import,ImportResource 当中的其中一种。所以：
+		 * 下面就是处理当前类的Import
 		 */
 		// Process any @Import annotations
-		//处理@Import  imports 3种情况
-		//ImportSelector
-		//普通类
-		//ImportBeanDefinitionRegistrar
-		//这里和内部地柜调用时候的情况不同
-		/**
+		//处理@Import 3种情况 1、ImportSelector 2、普通类 3、ImportBeanDefinitionRegistrar
+		/**这里和内部递归调用时候的情况不同
 		 * 这里处理的import是需要判断我们的类当中时候有@Import注解
 		 * 如果有这把@Import当中的值拿出来，是一个类
 		 * 比如@Import(xxxxx.class)，那么这里便把xxxxx传进去进行解析
 		 * 在解析的过程中如果发觉是一个importSelector那么就回调selector的方法
 		 * 返回一个字符串（类名），通过这个字符串得到一个类
-		 * 继而在递归调用本方法来处理这个类
-		 *
-		 * 判断一组类是不是imports（3种import）
-		 *
-		 *
+		 * 继而在递归调用本方法来处理这个类；getImports(sourceClass)拿到所有Import的类 Set<SourceClass>
 		 */
 		processImports(configClass, sourceClass, getImports(sourceClass), true);
 
@@ -679,10 +672,11 @@ class ConfigurationClassParser {
 		if (checkForCircularImports && isChainedImportOnStack(configClass)) {
 			this.problemReporter.error(new CircularImportProblem(configClass, this.importStack));
 		}
-		else {
+		else {// 暂时没研究这是在干啥
 			this.importStack.push(configClass);
 			try {
 				for (SourceClass candidate : importCandidates) {
+					// 下面一共有三个判断，就是import的三种情况，两个注解+一个普通类，但是普通类当做配置类再来一遍····
 					if (candidate.isAssignable(ImportSelector.class)) {
 						// Candidate class is an ImportSelector -> delegate to it to determine imports
 						Class<?> candidateClass = candidate.loadClass();
@@ -700,7 +694,7 @@ class ConfigurationClassParser {
 							String[] importClassNames = selector.selectImports(currentSourceClass.getMetadata());
 							Collection<SourceClass> importSourceClasses = asSourceClasses(importClassNames);
 							//递归，这里第二次调用processImports
-							//如果是一个普通类，会斤else
+							//如果是一个没加ImportSelector，ImportBeanDefinitionRegistrar注解的话，会进最后一个else
 							processImports(configClass, currentSourceClass, importSourceClasses, false);
 						}
 					}
@@ -720,7 +714,6 @@ class ConfigurationClassParser {
 					else {
 						// Candidate class not an ImportSelector or ImportBeanDefinitionRegistrar ->
 						// process it as an @Configuration class
-						// 否则，加入到importStack后调用processConfigurationClass 进行处理
 						//processConfigurationClass里面主要就是把类放到configurationClasses
 						//configurationClasses是一个集合，会在后面拿出来解析成bd继而注册
 						//可以看到普通类在扫描出来的时候就被注册了
