@@ -99,7 +99,8 @@ class ConfigurationClassEnhancer {
 	 * @return the enhanced subclass
 	 */
 	public Class<?> enhance(Class<?> configClass, @Nullable ClassLoader classLoader) {
-		//判断是否被代理过
+		//判断是否被增强过，或者说被代理过
+		// 被增强了的话，会让这个增强类实现一个 EnhancedConfiguration 接口，所以这里可以这样判断
 		if (EnhancedConfiguration.class.isAssignableFrom(configClass)) {
 			if (logger.isDebugEnabled()) {
 				logger.debug(String.format("Ignoring request to enhance %s as it has " +
@@ -111,7 +112,7 @@ class ConfigurationClassEnhancer {
 			}
 			return configClass;
 		}
-		//没有被代理cglib代理
+		//这就是最终代理类，其实就是基于CGLIB生成该类的一个子类，因为CGLIB动态代理是基于继承的
 		Class<?> enhancedClass = createClass(newEnhancer(configClass, classLoader));
 		if (logger.isDebugEnabled()) {
 			logger.debug(String.format("Successfully enhanced %s; enhanced class name is: %s",
@@ -128,7 +129,7 @@ class ConfigurationClassEnhancer {
 		//增强父类，地球人都知道cglib是基于继承来的
 		enhancer.setSuperclass(configSuperClass);
 		//增强接口，为什么要增强接口?
-		//便于判断，表示一个类以及被增强了
+		//便于判断，表示一个类以及被增强了，外面的方法判断用到了
 		enhancer.setInterfaces(new Class<?>[] {EnhancedConfiguration.class});
 		//不继承Factory接口
 		enhancer.setUseFactory(false);

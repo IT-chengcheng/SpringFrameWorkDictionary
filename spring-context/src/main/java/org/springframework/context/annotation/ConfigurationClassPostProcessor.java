@@ -259,7 +259,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			processConfigBeanDefinitions((BeanDefinitionRegistry) beanFactory);
 		}
 		//给配置类产生cglib代理
-		//为什么需要产生cglib代理？
+		//为什么需要产生cglib代理？，详见spring笔记
 		enhanceConfigurationClasses(beanFactory);
 		beanFactory.addBeanPostProcessor(new ImportAwareBeanPostProcessor(beanFactory));
 	}
@@ -446,8 +446,10 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		Map<String, AbstractBeanDefinition> configBeanDefs = new LinkedHashMap<>();
 		for (String beanName : beanFactory.getBeanDefinitionNames()) {
 			BeanDefinition beanDef = beanFactory.getBeanDefinition(beanName);
-			//判断是否是一个全注解类，就是判断是否加了@Configure注解，如果加了就将这个类变成cglib代理
-			//扫描是全注解类？full和lite的关系
+			/**判断是否是一个全注解类，就是判断是否加了@Configure注解，如果加了就将这个类变成cglib代理
+			 *  全注解：full ->  @Configuration
+			 *  非全注解：lite -> @Component,@ComponentScan,@Import,@ImportResource 注解中的任意一个,或者存在被@bean 注解的方法
+			 */
 			if (ConfigurationClassUtils.isFullConfigurationClass(beanDef)) {
 				if (!(beanDef instanceof AbstractBeanDefinition)) {
 					throw new BeanDefinitionStoreException("Cannot enhance @Configuration bean definition '" +
