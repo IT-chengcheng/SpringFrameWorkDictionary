@@ -126,9 +126,10 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	/* Using fully qualified class names as default bean names */
 	/*ImportSelect接口生成的类的名字，用类的全名*/
 	private BeanNameGenerator importBeanNameGenerator = new AnnotationBeanNameGenerator() {
+		// 这是个匿名内部类，只在一个地方用：ImportSelector里面生成的bean，才会用这个方法生成类名
 		@Override
 		protected String buildDefaultBeanName(BeanDefinition definition) {
-			String beanClassName = definition.getBeanClassName(); //类的全名 com.oad.Person
+			String beanClassName = definition.getBeanClassName(); //类的全名 com.oad.Person，
 			Assert.state(beanClassName != null, "No bean class name set");
 			return beanClassName;
 		}
@@ -385,26 +386,23 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 
 			// Read the model and create bean definitions based on its content
 			if (this.reader == null) {
+				// 传入的this.importBeanNameGenerator 是个匿名内部类，重写了生成beanName的方法
 				this.reader = new ConfigurationClassBeanDefinitionReader(
 						registry, this.sourceExtractor, this.resourceLoader, this.environment,
 						this.importBeanNameGenerator, parser.getImportRegistry());
 			}
 
 			/**
-			 * 这里值得注意的是扫描出来的bean当中可能包含了特殊类
-			 * 比如ImportBeanDefinitionRegistrar那么也在这个方法里面处理
-			 * 但是并不是包含在configClasses当中
-			 * configClasses当中主要包含的是importSelector
-			 * 因为ImportBeanDefinitionRegistrar在扫描出来的时候已经被添加到一个list当中去了
+			 * 这里值得注意的是扫描出来的bean当中可能包含了特殊类，比如实现了ImportBeanDefinitionRegistrar接口的类，这种类会放到
+			 * configClasses的数组中去，下面的方法处理：1、从congfigClasses数组中取出实现ImportBeanDefinitionRegistrar接口的类，然后
+			 * 执行接口方法 2、执行被@Bean注解的方法，就是将bean注册到bd-map中 3、执行ImportResource   4、将被Import的类注册到bd-map
 			 */
-
-			//bd 到 map 除却普通 ，里面执行了ImportBeanDefinitionRegistrar 的接口方法
 			this.reader.loadBeanDefinitions(configClasses);
 			alreadyParsed.addAll(configClasses);
 
 			candidates.clear();
-			//由于我们这里进行了扫描，把扫描出来的BeanDefinition注册给了factory
-			//但是
+
+			// 扫描出来新的bd，以及import里面的，所以这里肯定是大于号
 			if (registry.getBeanDefinitionCount() > candidateNames.length) {
 				String[] newCandidateNames = registry.getBeanDefinitionNames();
 				Set<String> oldCandidateNames = new HashSet<>(Arrays.asList(candidateNames));
