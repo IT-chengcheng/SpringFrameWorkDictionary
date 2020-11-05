@@ -123,6 +123,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		implements AutowireCapableBeanFactory {
 
 	/** Strategy for creating bean instances */
+	// 类的实例化策略，使用CGlib动态代理实例化bean ，new了这个类
 	private InstantiationStrategy instantiationStrategy = new CglibSubclassingInstantiationStrategy();
 
 	/** Resolver strategy for method parameter names */
@@ -542,14 +543,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		if (instanceWrapper == null) {
 			/**
-			 * 创建 bean 实例，并将实例包裹在 BeanWrapper 实现类对象中返回。
+			 * 真正开始创建 bean 实例，并将实例包裹在 BeanWrapper 实现类对象中返回。
 			 * createBeanInstance中包含三种创建 bean 实例的方式：
 			 *   1. 通过工厂方法创建 bean 实例
 			 *   2. 通过构造方法自动注入（autowire by constructor）的方式创建 bean 实例
 			 *   3. 通过无参构造方法方法创建 bean 实例
-			 *
-			 * 若 bean 的配置信息中配置了 lookup-method 和 replace-method，则会使用 CGLIB
-			 * 增强 bean 实例。关于lookup-method和replace-method后面再说。
+			 *   4、若 bean 的配置信息中配置了 lookup-method 和 replace-method，则用CGLIB产生该类的子类，做一个对该类的增强
+			 *   lookUpStart1
 			 */
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
 		}
@@ -1107,6 +1107,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		/**
 		 * 检测一个类的访问权限spring默认情况下对于非public的类是允许访问的。
+		 * AbstractBeanDefinition - > private boolean nonPublicAccessAllowed = true;
 		 */
 		if (beanClass != null && !Modifier.isPublic(beanClass.getModifiers()) && !mbd.isNonPublicAccessAllowed()) {
 			throw new BeanCreationException(mbd.getResourceDescription(), beanName,
@@ -1119,10 +1120,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		/**
-		 *
-		 * 如果工厂方法不为空，则通过工厂方法构建 bean 对象
-		 * 这种构建 bean 的方式可以自己写个demo去试试
-		 * 源码就不做深入分析了，有兴趣的同学可以和我私下讨论
+		 * 如果工厂方法不为空，则通过工厂方法构建 bean 对象。第一种创建bean的方式
 		 */
 		if (mbd.getFactoryMethodName() != null)  {
 			return instantiateUsingFactoryMethod(beanName, mbd, args);
@@ -1130,12 +1128,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Shortcut when re-creating the same bean...
 		/**
-		 * 从spring的原始注释可以知道这个是一个Shortcut，什么意思呢？
 		 * 当多次构建同一个 bean 时，可以使用这个Shortcut，
 		 * 也就是说不在需要次推断应该使用哪种方式构造bean
-		 *  比如在多次构建同一个prototype类型的 bean 时，就可以走此处的hortcut
-		 * 这里的 resolved 和 mbd.constructorArgumentsResolved 将会在 bean 第一次实例
-		 * 化的过程中被设置，后面来证明
+		 *  比如在多次构建同一个prototype类型的 bean 时，就可以走此处的shortcut
+		 * 这里的 resolved 和 mbd.constructorArgumentsResolved 将会在 bean 第一次实例化的过程中被设置
 		 */
 		boolean resolved = false;
 		boolean autowireNecessary = false;
@@ -1151,10 +1147,12 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		if (resolved) {
 			if (autowireNecessary) {
 				// 通过构造方法自动装配的方式构造 bean 对象
+				// 第二种创建bean的方式
 				return autowireConstructor(beanName, mbd, null, null);
 			}
 			else {
 				//通过默认的无参构造方法进行
+				// 第三种创建bean的方式 lookUpStart2
 				return instantiateBean(beanName, mbd);
 			}
 		}
@@ -1253,17 +1251,22 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * @return a BeanWrapper for the new instance
 	 */
 	protected BeanWrapper instantiateBean(final String beanName, final RootBeanDefinition mbd) {
+		// lookUpStart3
 		try {
 			Object beanInstance;
 			final BeanFactory parent = this;
 			if (System.getSecurityManager() != null) {
-				beanInstance = AccessController.doPrivileged((PrivilegedAction<Object>) () ->
-						getInstantiationStrategy().instantiate(mbd, beanName, parent),
-						getAccessControlContext());
+				//注意这个方法传了两个参数，所以用逗号隔开
+				beanInstance = AccessController.doPrivileged(
+						(PrivilegedAction<Object>) () ->getInstantiationStrategy().instantiate(mbd, beanName, parent),
+
+						getAccessControlContext()
+				);
 			}
 			else {
 				//getInstantiationStrategy()得到类的实例化策略
 				//默认情况下是得到一个反射的实例化策略
+				// getInstantiationStrategy()  = CglibSubclassingInstantiationStrategy
 				beanInstance = getInstantiationStrategy().instantiate(mbd, beanName, parent);
 			}
 			BeanWrapper bw = new BeanWrapperImpl(beanInstance);

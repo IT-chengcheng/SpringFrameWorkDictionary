@@ -572,9 +572,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				 * 1.实例化剩余的所有非延迟加载单例对象
 				 * 2.为什么说是剩余的？因为在上面的registerBeanPostProcessors中已经把所有BeanPostProcessors所有对象都已经实例化过了;
 				 * 3.这加载的时候会判断bean是不是 FactoryBean类型的
-				 *   3.1如果是FactoryBean类型，则getBean(&beanName),这里是把FactoryBean本身的对象给实例化了，而没有调它的getObject方法；
-				 *      3.1.1 还要判断是不是SmartFactoryBean类型的，SmartFactoryBean继承了FactoryBean接口；但是它多了一个	boolean isEagerInit();方法；这个方法就是判断是否需要通过FactoryBean的getObject()生成实例；
-				 *   3.2如果不是FactoryBean类型，直接getBean就行了；
+				 * 3.1如果是FactoryBean类型，则getBean(&beanName),这里是把FactoryBean本身的对象给实例化了，而没有调它的getObject方法；
+				 * 3.1.1 还要判断是不是SmartFactoryBean类型的，SmartFactoryBean继承了FactoryBean接口；但是它多了一个boolean isEagerInit();方法；
+				 *   这个方法就是判断是否需要通过FactoryBean的getObject()生成实例；
+				 * 3.2如果不是FactoryBean类型，直接getBean就行了；
 				 */
 				finishBeanFactoryInitialization(beanFactory);
 

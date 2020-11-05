@@ -59,6 +59,7 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 
 	@Override
 	public Object instantiate(RootBeanDefinition bd, @Nullable String beanName, BeanFactory owner) {
+		// lookUpStart4
 		// Don't override the class with CGLIB if no overrides.
 		//检测 bean 配置中是否配置了 lookup-method 或 replace-method
 		//如果配置了就需使用 CGLIB 构建 bean 对象
@@ -89,7 +90,7 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 			return BeanUtils.instantiateClass(constructorToUse);
 		}
 		else {
-			// Must generate CGLIB subclass.
+			// Must generate CGLIB subclass. lookUpStart5
 			return instantiateWithMethodInjection(bd, beanName, owner);
 		}
 	}
