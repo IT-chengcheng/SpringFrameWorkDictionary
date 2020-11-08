@@ -81,6 +81,7 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 	 * @see #isEligibleBean
 	 */
 	public List<Advisor> buildAspectJAdvisors() {
+		// 所有切面类的名字，比如 person
 		List<String> aspectNames = this.aspectBeanNames;
 
 		if (aspectNames == null) {
@@ -89,6 +90,7 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 				if (aspectNames == null) {
 					List<Advisor> advisors = new ArrayList<>();
 					aspectNames = new ArrayList<>();
+					// 获取所有的bd的名字，是所有！！，最终调用的是DeafaultListableBeanFactory
 					String[] beanNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 							this.beanFactory, Object.class, true, false);
 					for (String beanName : beanNames) {
@@ -101,6 +103,7 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 						if (beanType == null) {
 							continue;
 						}
+						// 判断该bean是否加了@Aspect注解，这就是寻找切面类的核心方法，就是将所有的bd循环判断
 						if (this.advisorFactory.isAspect(beanType)) {
 							aspectNames.add(beanName);
 							AspectMetadata amd = new AspectMetadata(beanType, beanName);

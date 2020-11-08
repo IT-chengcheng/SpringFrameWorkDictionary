@@ -361,9 +361,10 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		// Create proxy if we have advice.
 		/**超级关键的地方
 		 * 判断该bean是否需要增强，或者说判断该bean是否需要代理
-		 * 方法内部首先获得切面，再看切面里面的切点的表达式是否是否囊括了该bean的所有方法的其中一个方法，
+		 * 方法内部首先获得切面，再看切面里面的切点的表达式是否是否囊括了该bean的所有方法的其中一个方法，如果是，就创建代理
 		 * 一步步点进去看，很关键
 		 */
+		//数组里面值：@Before  @After @Round @AfterReturning  @AfterThrowing，所以这个数组最多五个值
 		Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
 		if (specificInterceptors != DO_NOT_PROXY) {
 			// advisedBeans增强bean的集合  -> 增强bean是指切入点表达式包含的类

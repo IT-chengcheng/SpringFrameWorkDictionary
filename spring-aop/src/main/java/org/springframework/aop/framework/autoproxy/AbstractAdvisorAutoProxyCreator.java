@@ -74,6 +74,7 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 			Class<?> beanClass, String beanName, @Nullable TargetSource targetSource) {
 
 		//就是判断该类是否需要代理，一定要点进去看
+		// Advisor就是 @Before  @After @Round @AfterReturning  @AfterThrowing，所以这个数组最多五个值
 		List<Advisor> advisors = findEligibleAdvisors(beanClass, beanName);
 		if (advisors.isEmpty()) {
 			return DO_NOT_PROXY;
@@ -92,8 +93,9 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	 * @see #extendAdvisors
 	 */
 	protected List<Advisor> findEligibleAdvisors(Class<?> beanClass, String beanName) {
-		// 1、这一步就是找出了所有的切面类，也就是加了@Aspect注解的类，注意这是父类，子类重新了这个方法
+		// 1、这一步就是找出了所有的切面类，也就是加了@Aspect注解的类，注意这是父类，子类重写了这个方法
 		// 这个子类也就是 注册的AOP关键子类：AnnotationAwareAspectJAutoProxyCreator
+		// Advisor就是增强器，最有多五个：@Before  @After @Round @AfterReturning  @AfterThrowing
 		List<Advisor> candidateAdvisors = findCandidateAdvisors();
 
 		// 2、找出了切面类后，再看切面里切点的表达式，是否包含了beanClass的其中一个方法。如果是，就为这个类创建代理
@@ -112,7 +114,9 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	 * @return the List of candidate Advisors
 	 */
 	protected List<Advisor> findCandidateAdvisors() {
-		// 要进到子类 AnnotationAwareAspectJAutoProxyCreator里面看，子类重写了这个方法
+		/**
+		 * 要进到子类 AnnotationAwareAspectJAutoProxyCreator里面看，子类重写了这个方法
+		 */
 		Assert.state(this.advisorRetrievalHelper != null, "No BeanFactoryAdvisorRetrievalHelper available");
 		return this.advisorRetrievalHelper.findAdvisorBeans();
 	}
