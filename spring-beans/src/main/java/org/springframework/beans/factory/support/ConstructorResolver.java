@@ -121,7 +121,8 @@ class ConstructorResolver {
 		Object[] argsToUse = null;
 		//确定参数值列表
 		//argsToUse可以有两种办法设置
-		//第一种通过beanDefinition设置
+		//第一种通过beanDefinition设置  definition.getConstructorArgumentValues().addGenericArgumentValue(definition.getBeanClassName());
+		// mybaytis就是通过这样方式，设置每个不同的bd的构造方法参数是接口名字
 		//第二种通过xml设置
 		if (explicitArgs != null) {
 			argsToUse = explicitArgs;
@@ -202,7 +203,7 @@ class ConstructorResolver {
 			//怎么排序的呢？
 			/**
 			 *  有限反问权限，继而参数个数
-			 *  这个自己可以写个测试去看看到底是不是和我说的一样
+			 *  这个自己可以写个测试去看看
 			 * 1. public Luban(Object o1, Object o2, Object o3)
 			 * 2. public Luban(Object o1, Object o2)
 			 * 3. public Luban(Object o1)
@@ -231,8 +232,6 @@ class ConstructorResolver {
 				 * 那么回去匹配到上面的构造方法的1和5
 				 * 由于构造方法1有更高的访问权限，所有选择1，尽管5看起来更加匹配
 				 * 但是我们看2,直接参数个数就不对所以直接忽略
-				 *
-				 *
 				 */
 				if (constructorToUse != null && argsToUse.length > paramTypes.length) {
 					// Already found greedy constructor that can be satisfied ->

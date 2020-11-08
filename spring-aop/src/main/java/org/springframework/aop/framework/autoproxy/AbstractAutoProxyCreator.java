@@ -136,8 +136,12 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 
 	private final Set<Object> earlyProxyReferences = Collections.newSetFromMap(new ConcurrentHashMap<>(16));
 
+	// 存放代理类的 bd名字：真实类型（代理类的class类型）
 	private final Map<Object, Class<?>> proxyTypes = new ConcurrentHashMap<>(16);
 
+	// advisedBeans增强bean的集合  -> 增强bean是指切入点表达式包含的类
+	// 是个map，"bd名字":"ture/false"。比如 car:ture,person:ture，dark:false ，
+	// 所以存放的是所有bean，但是用bool表示是否需要增强，也就是是否需要代理
 	private final Map<Object, Boolean> advisedBeans = new ConcurrentHashMap<>(256);
 
 
@@ -260,6 +264,8 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		// Create proxy here if we have a custom TargetSource.
 		// Suppresses unnecessary default instantiation of the target bean:
 		// The TargetSource will handle target instances in a custom fashion.
+		//全局搜了一下，发现没有设置 TargetSourceCreator[] customTargetSourceCreators的地方，这个值为null
+		// 所以spring内部并没有设置，是让程序员自己手动设置的
 		TargetSource targetSource = getCustomTargetSource(beanClass, beanName);
 		if (targetSource != null) {
 			if (StringUtils.hasLength(beanName)) {
@@ -270,7 +276,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 			this.proxyTypes.put(cacheKey, proxy.getClass());
 			return proxy;
 		}
-
+       //只要程序员没有自定义targetsource，都会返回null
 		return null;
 	}
 
@@ -288,6 +294,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName) {
+		// aop的代理，是在后置处理器的after里创建的，这个before啥也没处理
 		return bean;
 	}
 
@@ -349,15 +356,26 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		}
 
 		// Create proxy if we have advice.
+		/**超级关键的地方
+		 * 判断该bean是否需要增强，或者说判断该bean是否需要代理
+		 * 方法内部首先获得切面的增强器（加了@Aspect注解类的，并且加了@Before等通知的方法），然后看看该类的所有方法
+		 * 是否符合切面里面的切点表达式，如果符合，就给这个类创建代理
+		 */
 		Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
 		if (specificInterceptors != DO_NOT_PROXY) {
+			// advisedBeans增强bean的集合  -> 增强bean是指切入点表达式包含的类
+			// 是个map，"bd名字":"ture/false"。比如 car:ture,person:ture，dark:false ，
+			// 所以存放的是所有bean，但是用bool表示是否需要增强，也就是是否需要代理
 			this.advisedBeans.put(cacheKey, Boolean.TRUE);
+			// 真正开始创建代理的地方
 			Object proxy = createProxy(
 					bean.getClass(), beanName, specificInterceptors, new SingletonTargetSource(bean));
+			// 存放代理类的 bd名字：真实类型（代理类的class类型）
 			this.proxyTypes.put(cacheKey, proxy.getClass());
+			//直接返回代理对象
 			return proxy;
 		}
-
+		//不需要代理的话，就设置为false
 		this.advisedBeans.put(cacheKey, Boolean.FALSE);
 		return bean;
 	}
@@ -447,10 +465,16 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		if (this.beanFactory instanceof ConfigurableListableBeanFactory) {
 			AutoProxyUtils.exposeTargetClass((ConfigurableListableBeanFactory) this.beanFactory, beanName, beanClass);
 		}
-
+       //创建代理的工具类，每次都会将被代理的bean传到这个工具类，也会将所有的通知方法传进去，目的就是为了让代理类有这些通知方法
+		// 作为回调使用，类似于Proxy的handler
 		ProxyFactory proxyFactory = new ProxyFactory();
 		proxyFactory.copyFrom(this);
 
+		// ProxyTargetClass默认为false 表示使用JDK动态代理。 true：使用CGLIB动态代理
+		/**
+		 * 虽然springAOP默认使用的是JDK动态代理,或者即使指定proxyTargetClass = false，但是只要被代理的类没有实现接口
+		 * 也会为重新设置为true，也就是创建CGLIB代理
+		 */
 		if (!proxyFactory.isProxyTargetClass()) {
 			if (shouldProxyTargetClass(beanClass, beanName)) {
 				proxyFactory.setProxyTargetClass(true);
@@ -461,9 +485,11 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		}
 
 		Advisor[] advisors = buildAdvisors(beanName, specificInterceptors);
+		//将所有的通知都传进去，其实就是为了作为回调用，类似于jdk动态代理的invocationHandler
 		proxyFactory.addAdvisors(advisors);
+		// 如果程序员没有自定义targetsource，那么每次都会手动创建一个，从外面传进来的new SingletonTargetSource(bean),
 		proxyFactory.setTargetSource(targetSource);
-		customizeProxyFactory(proxyFactory);
+		customizeProxyFactory(proxyFactory);// 空方法，啥也没写，等着程序员集成这个父类，重写呢
 
 		proxyFactory.setFrozen(this.freezeProxy);
 		if (advisorsPreFiltered()) {

@@ -487,8 +487,14 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		try {
-			// 在 bean 初始化前应用后置处理，如果后置处理返回的 bean 不为空，则直接返回
-			//这个类需要通过代码演示
+			/**  这个方法的执行逻辑
+			 * 1、执行了接口方法 InstantiationAwareBeanPostProcessor ->  postProcessBeforeInstantiation()
+			 *    干扰bean的创建，也可以说提前创建bean。
+			   2、如果上一步成功的创建了一个bean，或者说实例化了一个bean，接下来执行
+			           BeanPostProcessor   ->   postProcessAfterInitialization()
+			      也就是对bean进行初始化
+			 注意：这里并没有创建aop代理，除非程序员手动创建了一个叫targettsource的东西。否则在创建aop代理的地方在后面。
+			 */
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
@@ -591,8 +597,21 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		Object exposedObject = bean;
 		try {
 			//设置属性，非常重要，也是通过后置处理器给属性自动赋值的
+			/**主要执行以下逻辑
+			 * 1、InstantiationAwareBeanPostProcessor   ->  boolean postProcessAfterInstantiation()
+			 2、InstantiationAwareBeanPostProcessor -> postProcessPropertyValues（）
+			   执行完这里后，InstantiationAwareBeanPostProcessor接口类 就已经全部执行结束了
+			  （接口就三个方法，前面执行了beforeInstantiation，这里执行剩下的俩方法）
+			 */
 			populateBean(beanName, mbd, instanceWrapper);
-			//执行后置处理器，aop就是在这里完成的处理
+
+			/** 执行的逻辑
+			 * 1、invokeAwareMethods  执行一部分实现了aware的接口类的接口方法
+			 * 2、BeanPostProcessor -> Object postProcessBeforeInitialization
+			 * 3、invokeInitMethods
+			 * 4、BeanPostProcessor -> Object postProcessAfterInitialization
+			 * AopStart1（如果前面没有创建成功的话，这里就是第一入口）
+			 */
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
 		}
 		catch (Throwable ex) {
@@ -1050,11 +1069,17 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		Object bean = null;
 		if (!Boolean.FALSE.equals(mbd.beforeInstantiationResolved)) {
 			// Make sure bean class is actually resolved at this point.
+			// bd有个字段synthetic，英文意思是：人造的。在这就是是否是程序员自定义的bd，还是spring定义的
+			// 不是程序员定义的，并且bd是否实现InstantiationAwareBeanPostProcessor接口
 			if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+				// 获取bd的类类型，比如 org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator
+				// com.luban.app.Car
 				Class<?> targetType = determineTargetType(beanName, mbd);
 				if (targetType != null) {
+					//干扰bean的创建  -> Instantiation
 					bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);
 					if (bean != null) {
+						// 只有上面的方法，提前将bean创建出来，才会执行这个方法，也就是初始化bean -> Initialization
 						bean = applyBeanPostProcessorsAfterInitialization(bean, beanName);
 					}
 				}
@@ -1129,7 +1154,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Shortcut when re-creating the same bean...
 		/**
 		 * 当多次构建同一个 bean 时，可以使用这个Shortcut，
-		 * 也就是说不在需要次推断应该使用哪种方式构造bean
+		 * 也就是说不在需要每次推断应该使用哪种方式构造bean
 		 *  比如在多次构建同一个prototype类型的 bean 时，就可以走此处的shortcut
 		 * 这里的 resolved 和 mbd.constructorArgumentsResolved 将会在 bean 第一次实例化的过程中被设置
 		 */
@@ -1140,6 +1165,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				if (mbd.resolvedConstructorOrFactoryMethod != null) {
 					resolved = true;
 					//如果已经解析了构造方法的参数，则必须要通过一个带参构造方法来实例
+					// mybatis有这一样一行设置
+					// definition.getConstructorArgumentValues().addGenericArgumentValue(definition.getBeanClassName());
+                    // 经过这行代码，就给bd设置了构造器参数，autowireNecessary也就true，也就用带参构造器实例化bd
 					autowireNecessary = mbd.constructorArgumentsResolved;
 				}
 			}
@@ -1741,8 +1769,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		Object wrappedBean = bean;
 		if (mbd == null || !mbd.isSynthetic()) {
-			//执行后置处理的befor
-// 比如CommonAnnotationBeanProcessor
+			//执行后置处理的before  比如CommonAnnotationBeanProcessor
 				wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
 
 		}

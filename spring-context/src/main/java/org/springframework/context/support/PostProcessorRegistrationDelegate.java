@@ -252,7 +252,13 @@ final class PostProcessorRegistrationDelegate {
 
 	public static void registerBeanPostProcessors(
 			ConfigurableListableBeanFactory beanFactory, AbstractApplicationContext applicationContext) {
-
+		/**
+		 * registerBeanPostProcessors中注册BeanPostProcessor的顺序是：
+		   1、注册实现了PriorityOrdered接口的BeanPostProcessor
+		   2、注册实现了Ordered接口的BeanPostProcessor
+		   3、注册常规的BeanPostProcessor ，也就是没有实现优先级接口的BeanPostProcessor
+		   4、注册Spring内部BeanPostProcessor
+		 */
 		//从beanDefinitionMap中得到所有的BeanPostProcessor
 		String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanPostProcessor.class, true, false);
 
@@ -277,6 +283,7 @@ final class PostProcessorRegistrationDelegate {
 				}
 			}
 			else if (beanFactory.isTypeMatch(ppName, Ordered.class)) {
+				// SpringAop的这个类 AnnotationAwareAspectJAutoProxyCreator，就在这里加入
 				orderedPostProcessorNames.add(ppName);
 			}
 			else {

@@ -107,6 +107,11 @@ public class ProxyFactory extends ProxyCreatorSupport {
 	 * @return the proxy object
 	 */
 	public Object getProxy(@Nullable ClassLoader classLoader) {
+		/**createAopProxy() 会创建两种代理工厂，根据一堆判断去判断创建哪一种。这两种工厂类都实现了 AopProxy接口
+		 *  1、new ObjenesisCglibAopProxy(config) extends CglibAopProxy implements AopProxy
+		 *  2、new JdkDynamicAopProxy implements AopProxy，InvocationHandler
+		 *  JdkDynamicAopProxy这个类，多实现了InvocationHandler，也就是在这个类里面执行的动态代理的那个invoke方法
+		 */
 		return createAopProxy().getProxy(classLoader);
 	}
 

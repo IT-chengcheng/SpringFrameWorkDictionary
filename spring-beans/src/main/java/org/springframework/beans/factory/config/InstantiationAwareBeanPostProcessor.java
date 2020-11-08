@@ -45,7 +45,7 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.aop.framework.autoproxy.target.LazyInitTargetSourceCreator
  */
 /**
- 此接口是BeanPostProcessor的子接口，用于在实例化钱回调和在实例化后但在显示属性设置或之前的回调自动装配。
+ 此接口是BeanPostProcessor的子接口，用于在实例化前回调和在实例化后但在显示属性设置或之前的回调自动装配。
  这个接口是一个特殊用途的接口，主要用于框架内的内部使用。建议尽可能使用BeanPostProcessor接口
  */
 public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
@@ -75,12 +75,13 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	/**
 	 在目标bean被实例化之前应用这个BeanPostProcessor。返回的bean对象可以是一个代理来代替目标bean，
 	 有效地抑制目标bean的默认实例化。如果此方法返回非空对象，则创建bean的过程将被短路。
+	 注意这里是 Instantiation ->   实例化
+	 父接口是   Initialization -> 初始化；赋初值
 	 */
 	@Nullable
 	default Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
 		return null;
 	}
-
 	/**
 	 * Perform operations after the bean has been instantiated, via a constructor or factory method,
 	 * but before Spring property population (from explicit properties or autowiring) occurs.
