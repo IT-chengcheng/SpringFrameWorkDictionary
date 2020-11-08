@@ -416,8 +416,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		Object result = existingBean;
 		List<BeanPostProcessor> beanPostProcessors = getBeanPostProcessors();
 		// 这个BP数组，里面有很多processors，spring内部的是通过reader的构造方法入口加入的其中包括CommonAnnotationBeanPostProcessor
-		// 还有程序员自定义的processors
-		// 这个类commonAnnotationBeanPostProcess有一个功能：处理加了@postcontruct注解的方法
+		// 还有程序员自定义的processors,这个类commonAnnotationBeanPostProcess有一个功能：处理加了@postcontruct注解的方法
 		for (BeanPostProcessor processor : getBeanPostProcessors()) {
 			Object current = processor.postProcessBeforeInitialization(result, beanName);
 			if (current == null) {
@@ -434,6 +433,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		Object result = existingBean;
 		for (BeanPostProcessor processor : getBeanPostProcessors()) {
+			// 其中一个processor是 AnnotationAwareAspectJAutoProxyCreator，但是，是它父类AbstractAutoProxyCreator实现了接口方法
+			// realAopStart2
 			Object current = processor.postProcessAfterInitialization(result, beanName);
 			if (current == null) {
 				return result;
@@ -493,7 +494,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			   2、如果上一步成功的创建了一个bean，或者说实例化了一个bean，接下来执行
 			           BeanPostProcessor   ->   postProcessAfterInitialization()
 			      也就是对bean进行初始化
-			 注意：这里并没有创建aop代理，除非程序员手动创建了一个叫targettsource的东西。否则在创建aop代理的地方在后面。
+			 注意：这里并没有创建aop代理，除非程序员手动创建了一个叫targetRsource的东西。否则创建aop代理的地方在后面。
+			 AopStart1 前提是有程序员自定义targetSource
 			 */
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
@@ -609,8 +611,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			 * 1、invokeAwareMethods  执行一部分实现了aware的接口类的接口方法
 			 * 2、BeanPostProcessor -> Object postProcessBeforeInitialization
 			 * 3、invokeInitMethods
-			 * 4、BeanPostProcessor -> Object postProcessAfterInitialization
-			 * AopStart1（如果前面没有创建成功的话，这里就是第一入口）
+			 * 4、BeanPostProcessor -> Object postProcessAfterInitialization ==》realAopStart1（如果前面没有创建成功的话，这里就是第一入口）
+			 *
 			 */
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
 		}
@@ -1077,6 +1079,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				Class<?> targetType = determineTargetType(beanName, mbd);
 				if (targetType != null) {
 					//干扰bean的创建  -> Instantiation
+					//AopStart2 前提是有程序员自定义targetSource
 					bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);
 					if (bean != null) {
 						// 只有上面的方法，提前将bean创建出来，才会执行这个方法，也就是初始化bean -> Initialization
@@ -1105,6 +1108,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		for (BeanPostProcessor bp : getBeanPostProcessors()) {
 			if (bp instanceof InstantiationAwareBeanPostProcessor) {
 				InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
+				//AopStart3 前提是有程序员自定义targetSource，有很多个ibp，其中一个是AnnotationAwareAspectJAutoProxyCreator，但是会执行到它的父类AbstractAutoProxyCreator
 				Object result = ibp.postProcessBeforeInstantiation(beanClass, beanName);
 				if (result != null) {
 					return result;
@@ -1791,6 +1795,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		if (mbd == null || !mbd.isSynthetic()) {
 			//执行后置处理器的after方法
+			// realAopStart2
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}
 

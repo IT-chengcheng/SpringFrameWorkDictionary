@@ -272,6 +272,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 				this.targetSourcedBeans.add(beanName);
 			}
 			Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(beanClass, beanName, targetSource);
+			//AopStart4 前提是有程序员自定义targetSource
 			Object proxy = createProxy(beanClass, beanName, specificInterceptors, targetSource);
 			this.proxyTypes.put(cacheKey, proxy.getClass());
 			return proxy;
@@ -306,8 +307,10 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	@Override
 	public Object postProcessAfterInitialization(@Nullable Object bean, String beanName) throws BeansException {
 		if (bean != null) {
+			//cachekey就两种 &person或者person，就是带不带&
 			Object cacheKey = getCacheKey(bean.getClass(), beanName);
 			if (!this.earlyProxyReferences.contains(cacheKey)) {
+				//realAopStart3
 				return wrapIfNecessary(bean, beanName, cacheKey);
 			}
 		}
@@ -358,8 +361,8 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		// Create proxy if we have advice.
 		/**超级关键的地方
 		 * 判断该bean是否需要增强，或者说判断该bean是否需要代理
-		 * 方法内部首先获得切面的增强器（加了@Aspect注解类的，并且加了@Before等通知的方法），然后看看该类的所有方法
-		 * 是否符合切面里面的切点表达式，如果符合，就给这个类创建代理
+		 * 方法内部首先获得切面，再看切面里面的切点的表达式是否是否囊括了该bean的所有方法的其中一个方法，
+		 * 一步步点进去看，很关键
 		 */
 		Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
 		if (specificInterceptors != DO_NOT_PROXY) {
@@ -367,7 +370,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 			// 是个map，"bd名字":"ture/false"。比如 car:ture,person:ture，dark:false ，
 			// 所以存放的是所有bean，但是用bool表示是否需要增强，也就是是否需要代理
 			this.advisedBeans.put(cacheKey, Boolean.TRUE);
-			// 真正开始创建代理的地方
+			// 真正开始创建代理的地方 //realAopStart4
 			Object proxy = createProxy(
 					bean.getClass(), beanName, specificInterceptors, new SingletonTargetSource(bean));
 			// 存放代理类的 bd名字：真实类型（代理类的class类型）

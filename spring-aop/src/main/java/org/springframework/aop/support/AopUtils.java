@@ -241,6 +241,7 @@ public abstract class AopUtils {
 		if (!Proxy.isProxyClass(targetClass)) {
 			classes.add(ClassUtils.getUserClass(targetClass));
 		}
+		//classes这个数组里除了盛放 Person.class，还将Person所实现的所有的接口也放进去，目的是为了下面的遍历
 		classes.addAll(ClassUtils.getAllInterfacesForClassAsSet(targetClass));
 
 		for (Class<?> clazz : classes) {
@@ -249,6 +250,10 @@ public abstract class AopUtils {
 				if (introductionAwareMethodMatcher != null ?
 						introductionAwareMethodMatcher.matches(method, targetClass, hasIntroductions) :
 						methodMatcher.matches(method, targetClass)) {
+					//targetClass也就是Person，的所有方法，以及Person所实现接口的所有的方法，只要有一个方法匹配上切点的表达式
+					//就直接返回true。换句话说：只要该类的方法以及所实现接口的所有的方法只要有一个满足切点的表达式，那就创建代理
+					// 这里很关键，也是AOP的核心之一
+					// 切点表达式：@Pointcut("execution(public * com.luban.app..*.*(..))")
 					return true;
 				}
 			}
@@ -285,6 +290,8 @@ public abstract class AopUtils {
 		}
 		else if (advisor instanceof PointcutAdvisor) {
 			PointcutAdvisor pca = (PointcutAdvisor) advisor;
+			// 判断表达式，是否包含该类的方法，包含一个就行
+			// 点进去看，这里很关键
 			return canApply(pca.getPointcut(), targetClass, hasIntroductions);
 		}
 		else {
@@ -317,6 +324,7 @@ public abstract class AopUtils {
 				// already processed
 				continue;
 			}
+			//会进入这个  -> canApply ，这是超级重点，重点！！！！！！！！！
 			if (canApply(candidate, clazz, hasIntroductions)) {
 				eligibleAdvisors.add(candidate);
 			}

@@ -86,12 +86,16 @@ public class AnnotationAwareAspectJAutoProxyCreator extends AspectJAwareAdvisorA
 	}
 
 
-	@Override
+
+	@Override   //这个方法是重写了父类的方法
 	protected List<Advisor> findCandidateAdvisors() {
 		// Add all the Spring advisors found according to superclass rules.
+		// 先调用父类的方法，经过断点调试，发现返回的这个数组是空
 		List<Advisor> advisors = super.findCandidateAdvisors();
 		// Build Advisors for all AspectJ aspects in the bean factory.
 		if (this.aspectJAdvisorsBuilder != null) {
+
+			// buildAspectJAdvisors() 这个方法就是寻找所有的切面，也就是加了@Aspect注解的方法
 			advisors.addAll(this.aspectJAdvisorsBuilder.buildAspectJAdvisors());
 		}
 		return advisors;
