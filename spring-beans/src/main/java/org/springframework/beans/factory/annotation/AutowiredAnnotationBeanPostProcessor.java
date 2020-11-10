@@ -365,9 +365,19 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 	public PropertyValues postProcessPropertyValues(
 			PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) throws BeanCreationException {
 
-		// 找出该bean所有加了@Autowired注解的属性
+		/** 找出该bean所有加了@Autowired注解的属性,和方法
+		 *  @Autowired注解的属性  element是  AutowiredFieldElement extends InjectionMetadata.InjectedElement
+		 *  @Autowired注解的方法  element是  AutowiredMethodElement extends InjectionMetadata.InjectedElement
+		 */
 		InjectionMetadata metadata = findAutowiringMetadata(beanName, bean.getClass(), pvs);
 		try {
+			/** 如果是属性：
+			 *         ReflectionUtils.makeAccessible(field);
+			 *          field.set(bean, value);
+			 *  如果是方法：
+			 *         ReflectionUtils.makeAccessible(method);
+			           method.invoke(bean, arguments);
+			 */
 			metadata.inject(bean, beanName, pvs);
 		}
 		catch (BeanCreationException ex) {
@@ -471,6 +481,9 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 			targetClass = targetClass.getSuperclass();
 		}
 		while (targetClass != null && targetClass != Object.class);
+		/**
+		 * 注意：targetClass != Object.class，意思是Class类不会进行自动注入
+		 */
 
 		return new InjectionMetadata(clazz, elements);
 	}
@@ -567,6 +580,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 
 		@Override
 		protected void inject(Object bean, @Nullable String beanName, @Nullable PropertyValues pvs) throws Throwable {
+			// 这个方法是for循环执行的，意思就是循环bean的所有的属性，然后进行赋值（前提是加了@Autowire注解）
 			Field field = (Field) this.member;
 			Object value;
 			if (this.cached) {
@@ -606,6 +620,10 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 				}
 			}
 			if (value != null) {
+				/** autowire终结
+				 * Autowire重点：
+				 * 首先设置私有属性可访问，然后通过反射进行赋值，而不是set方法！！！
+				 */
 				ReflectionUtils.makeAccessible(field);
 				field.set(bean, value);
 			}

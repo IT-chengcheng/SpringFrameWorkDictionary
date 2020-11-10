@@ -79,6 +79,8 @@ public class InjectionMetadata {
 	}
 
 	public void inject(Object target, @Nullable String beanName, @Nullable PropertyValues pvs) throws Throwable {
+		//  @Autowired注解的属性,方法。 都会进到这里进行操作
+		// @Resouce注解的属性，方法 。  都会进到这里进行操作
 		Collection<InjectedElement> checkedElements = this.checkedElements;
 		Collection<InjectedElement> elementsToIterate =
 				(checkedElements != null ? checkedElements : this.injectedElements);
@@ -87,6 +89,15 @@ public class InjectionMetadata {
 				if (logger.isDebugEnabled()) {
 					logger.debug("Processing injected element of bean '" + beanName + "': " + element);
 				}
+				/**
+				 *  @Autowired注解的属性  element是  AutowiredFieldElement extends InjectionMetadata.InjectedElement
+				 *                                   该类重写了父类InjectedElement的inject方法
+				 *  @Autowired注解的方法  element是  AutowiredMethodElement extends InjectionMetadata.InjectedElement
+				 *                                    该类重写了父类InjectedElement的inject方法
+				 *  @Resource注解的方法  element是   ResourceElement  extends LookupElement extends InjectionMetadata.InjectedElement
+				 *                                   该类没有重写inject方法，用的是父类的inject方法
+				 *  进入的类不一样。一个是AutowiredFieldElement，一个是AutowiredMethodElement，一个是ResourceElement
+				 */
 				element.inject(target, beanName, pvs);
 			}
 		}
@@ -173,18 +184,20 @@ public class InjectionMetadata {
 		 */
 		protected void inject(Object target, @Nullable String requestingBeanName, @Nullable PropertyValues pvs)
 				throws Throwable {
-
-			if (this.isField) {
+			/**
+			 * AutowiredFieldElement AutowiredMethodElement 重写了这个方法
+			 * ResourceElement  没重写，用的就是这个方法
+			 */
+			if (this.isField) { //只有@Resource走，其他重写了
 				Field field = (Field) this.member;
 				ReflectionUtils.makeAccessible(field);
-				// 通过反射给属性赋值
 				field.set(target, getResourceToInject(target, requestingBeanName));
 			}
 			else {
 				if (checkPropertySkipping(pvs)) {
 					return;
 				}
-				try {
+				try {//只有@Resource走，其他重写了
 					Method method = (Method) this.member;
 					ReflectionUtils.makeAccessible(method);
 					method.invoke(target, getResourceToInject(target, requestingBeanName));

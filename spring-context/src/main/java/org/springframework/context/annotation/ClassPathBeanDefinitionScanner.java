@@ -301,7 +301,7 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 				// beanName 就是首字母小写  比如:dog,person
 				if (candidate instanceof AbstractBeanDefinition) {
 					//candidate是ScannedGenericBeanDefinition，是它的子类，所以会进这个判断
-					//则为他设置默认值，比如lazy，init destory
+					//则为他设置默认值，比如lazy，init destory,autowire-mode默认设置为AUTOWIRE_NO
 					postProcessBeanDefinition((AbstractBeanDefinition) candidate, beanName);
 				}
 				if (candidate instanceof AnnotatedBeanDefinition) {

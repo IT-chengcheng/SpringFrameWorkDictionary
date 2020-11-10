@@ -1387,10 +1387,24 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		if (!continueWithPropertyPopulation) {
 			return;
 		}
-
+		/**PropertyValues里面是什么？：一个类的的方法如果是“set”开头，后面随便跟(首字母大写)，参数是一个并且是bean类型的话，这个方法
+		 * 就是一个propertyValue。比如：Person类里有 setAbc(Car car)、setZfasdfasdfdas(Dar fasdfasd).
+		 * 有几个这样的方法，properValues就有几个。找出这些东西有啥用的呢？：为了后面执行这些方法，通过这些方法给属性赋值
+		 * 也就是说：一个类的属性没有加@Autowire或者没加@Resourece的时，可以也可以给属性赋值，spring会执行这些setA...方法
+		 *但是下面这个pvs是空，我猜测如果程序员没有手动给bd设置的话，就是空。
+		 *
+		 */
 		PropertyValues pvs = (mbd.hasPropertyValues() ? mbd.getPropertyValues() : null);
-
+		/**  这又是关键点：上面说了 pvs默认是空。但是怎么获取Person类的这些setZ...方法呢？
+		 * 首先需要手动设置bd的autowireMode属性为   AUTOWIRE_BY_NAME  或者 AUTOWIRE_BY_TYPE，才会进入这个判断，然后分别获取pvs
+		 * 特别重要：spring扫描的bd，autowireMode默认值是  AUTOWIRE_NO。所以spring怎么自动注入属性值的呢？
+		 * 1、直接加@Autowire或者@Resource注解
+		 * 2、不加注解的话，Person类里面有setA...这种set方法，然后设置bd的autowireMode=AUTOWIRE_BY_TYPE或者AUTOWIRE_BY_NAME
+		 * mybatis源码里，就用到了这一点，扫描完bd后，bd.setAutowireMode = AUTOWIRE_BY_TYPE,这样spring就会执行mapperFactoryBean
+		 * 的set方法，给mapperFactoryBean的属性赋值，也就是设置sqlsession
+		 */
 		if (mbd.getResolvedAutowireMode() == AUTOWIRE_BY_NAME || mbd.getResolvedAutowireMode() == AUTOWIRE_BY_TYPE) {
+			// bd默认是AUTOWIRE_NO，如果手动设置为这两个值就会进入这个判断，比如mybatis就用到了这点
 			MutablePropertyValues newPvs = new MutablePropertyValues(pvs);
 			// Add property values based on autowire by name if applicable.
 			if (mbd.getResolvedAutowireMode() == AUTOWIRE_BY_NAME) {
@@ -1416,13 +1430,14 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					if (bp instanceof InstantiationAwareBeanPostProcessor) {
 						// 实现InstantiationAwareBeanPostProcessor接口的类 目前有：
 						/**
-						 *AutowiredAnnotationBeanPostProcessor 处理加了@Autowired的属性
-						 * CommonAnnotationBeanPostProcessor  处理加了@Resourece的属性
-						 * RequiredAnnotationBeanPostProcessor 处理加了@Required的属性
+						 * AutowiredAnnotationBeanPostProcessor 处理加了@Autowired的注解
+						 * CommonAnnotationBeanPostProcessor  处理加了@Resourece的注解
+						 * RequiredAnnotationBeanPostProcessor 处理加了@Required的注解，只能加载set方法上，且bean必须存在，否则报错
 						 */
 						InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
 						// 执行这个方法就是上面三个类中的方法
-						// 这个方法可不是BeanPostProcessor接口的方法，而是InstantiationAwareBeanPostProcessor里面新加的方法
+						// 这个方法可不是BeanPostProcessor接口的方法，而是InstantiationAwareBeanPostProcessor里面扩展的方法
+						// 这是给bean的属性赋值的其中一个入口（一共两个），也就是处理加了@Autowired  @Resourece
 						pvs = ibp.postProcessPropertyValues(pvs, filteredPds, bw.getWrappedInstance(), beanName);
 						if (pvs == null) {
 							return;
@@ -1435,9 +1450,14 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 		}
 
-		if (pvs != null) {
+		if (pvs != null) {// 这是给bean的属性赋值的其中一个入口（一共两个，这是第二个），前提是pvs不为空，从哪获取？看上面
 			applyPropertyValues(beanName, mbd, bw, pvs);
 		}
+		/** 最终总结：给bean的属性赋值的方法就两种
+		 * 1、通过 InstantiationAwareBeanPostProcessor拓展方法 -> postProcessPropertyValues()，前提是加了@Autowire @Resource
+		 * 2、没加注解的话，手动设置了bd.setAutowireMode = AUTOWIRE_BY_TYPE，会将符合规则的set方法提取出来作为PropertyValues，
+		 *    执行 applyPropertyValues(beanName, mbd, bw, pvs);
+		 */
 	}
 
 	/**

@@ -98,8 +98,7 @@ final class PostProcessorRegistrationDelegate {
 			//因为如果在之后就没有意义，因为那个时候已经需要使用工厂了
 			//所以这里spring'在一开始就注册了一个BeanFactoryPostProcessor，用来插手springfactory的实例化过程
 			//在这个地方断点可以知道这个类叫做ConfigurationClassPostProcessor
-			//ConfigurationClassPostProcessor那么这个类能干嘛呢？可以参考源码
-			//下面我们对这个牛逼哄哄的类（他能插手spring工厂的实例化过程还不牛逼吗？）
+			//ConfigurationClassPostProcessor 做了超级多的事
 			for (String ppName : postProcessorNames) {
 				if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
 					// 执行beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class)，意味着就已经这个类实例化了

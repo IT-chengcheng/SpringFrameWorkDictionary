@@ -320,8 +320,11 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 	@Override
 	public PropertyValues postProcessPropertyValues(
 			PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) {
-		//找出类中被@Resource注解的属性和方法
-		//else if (field.isAnnotationPresent(Resource.class))
+		/** 找出该bean所有加了@Resource注解的属性,和方法
+		 *  @Resource注解的属性 和 方法 都是：
+		 *  element是  ResourceElement extends LookupElement extends InjectionMetadata.InjectedElement
+		 *  但是ResourceElement没有重写InjectedElement的 inject方法
+		 */
 		InjectionMetadata metadata = findResourceMetadata(beanName, bean.getClass(), pvs);
 		try {
 			metadata.inject(bean, beanName, pvs);
