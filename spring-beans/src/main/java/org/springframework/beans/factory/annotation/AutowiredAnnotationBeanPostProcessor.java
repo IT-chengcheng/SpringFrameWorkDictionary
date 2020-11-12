@@ -581,18 +581,21 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 		@Override
 		protected void inject(Object bean, @Nullable String beanName, @Nullable PropertyValues pvs) throws Throwable {
 			// 这个方法是for循环执行的，意思就是循环bean的所有的属性，然后进行赋值（前提是加了@Autowire注解）
+			// 特别注意：这个field可不一定是类，可以是Map<String，Car> map。而且如果有两个Car类型的bean
+			// 那么这个Map的size就是2，key就是不同的名字，比如car1，car2，car3。Spring真是吊的不行！！！
 			Field field = (Field) this.member;
 			Object value;
 			if (this.cached) {
 				value = resolvedCachedArgument(beanName, this.cachedFieldValue);
 			}
-			else {
+			else {// 如果field是个Map，这个desc就能检测到
 				DependencyDescriptor desc = new DependencyDescriptor(field, this.required);
 				desc.setContainingClass(bean.getClass());
 				Set<String> autowiredBeanNames = new LinkedHashSet<>(1);
 				Assert.state(beanFactory != null, "No BeanFactory available");
 				TypeConverter typeConverter = beanFactory.getTypeConverter();
 				try {
+					//如果filed是个map，这个value值就是个map，而且里面的key，value已经赋值完成了。只需要将value赋值给filed即可
 					value = beanFactory.resolveDependency(desc, beanName, autowiredBeanNames, typeConverter);
 				}
 				catch (BeansException ex) {

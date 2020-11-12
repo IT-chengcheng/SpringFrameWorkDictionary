@@ -1391,8 +1391,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		 * 就是一个propertyValue。比如：Person类里有 setAbc(Car car)、setZfasdfasdfdas(Dar fasdfasd).
 		 * 有几个这样的方法，properValues就有几个。找出这些东西有啥用的呢？：为了后面执行这些方法，通过这些方法给属性赋值
 		 * 也就是说：一个类的属性没有加@Autowire或者没加@Resourece的时，可以也可以给属性赋值，spring会执行这些setA...方法
-		 *但是下面这个pvs是空，我猜测如果程序员没有手动给bd设置的话，就是空。
-		 *
+		 *但是下面这个pvs是空，因为程序员没有手动给bd设置，所以就是空。
+		 *mybtis扫描完mapper后，会给每个bd.getPropertyValues().add（），手动设置！！
 		 */
 		PropertyValues pvs = (mbd.hasPropertyValues() ? mbd.getPropertyValues() : null);
 		/**  这又是关键点：上面说了 pvs默认是空。但是怎么获取Person类的这些setZ...方法呢？
