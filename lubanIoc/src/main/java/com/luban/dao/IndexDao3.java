@@ -2,9 +2,6 @@ package com.luban.dao;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.stereotype.Component;
-
-import java.lang.reflect.Proxy;
 
 
 public class IndexDao3 implements BeanPostProcessor {

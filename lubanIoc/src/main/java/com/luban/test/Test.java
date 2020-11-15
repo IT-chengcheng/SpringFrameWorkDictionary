@@ -1,16 +1,8 @@
 package com.luban.test;
 
-import com.luban.app.BeanFactoryPostProcessor;
-import com.luban.app.Dog;
-import com.luban.app.Eat;
-import com.luban.app.Person;
-import com.luban.config.Configure;
-import com.luban.dao.IndexDao;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.stereotype.Controller;
 
-import java.util.Map;
+import com.luban.config.Configure;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
  * @author:chengcheng
@@ -23,15 +15,12 @@ public class Test {
 		AnnotationConfigApplicationContext	c = new AnnotationConfigApplicationContext();
 
 		c.register(Configure.class);
-		c.addBeanFactoryPostProcessor(new BeanFactoryPostProcessor());
 
        c.refresh();
 
-        Dog personName = (Dog) c.getBean("person");
-		Person personType =  c.getBean(Person.class);
-		Person person = (Person) c.getBean("&person");
-		//Dog dogName = (Dog) c.getBean("dog");
-		Dog DogType =  c.getBean(Dog.class);
+		System.out.println(c.getBean("&person"));
+		System.out.println(c.getBean("person"));
+
 
 
      /* Map temp  =  c.getBeansWithAnnotation(Eat.class);

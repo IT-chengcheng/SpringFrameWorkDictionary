@@ -1,7 +1,5 @@
 package com.luban.dao;
 
-import org.springframework.stereotype.Component;
-
 public class IndexDao1 {
 	public IndexDao1(){
 
