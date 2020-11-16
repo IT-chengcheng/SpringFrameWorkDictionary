@@ -417,7 +417,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			return resolvedBeanNames;
 		}
 		/**
-		 * 这是真正根据类型获取名字的真正入口。
+		 * 这是根据类型获取名字的真正入口。
 		 */
 		resolvedBeanNames = doGetBeanNamesForType(ResolvableType.forRawClass(type), includeNonSingletons, true);
 		if (ClassUtils.isCacheSafe(type, getBeanClassLoader())) {
@@ -1111,6 +1111,14 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			Object result = getAutowireCandidateResolver().getLazyResolutionProxyIfNecessary(
 					descriptor, requestingBeanName);
 			if (result == null) {
+				/**
+				 * 做了两大件事
+				 * 一、如果field是 Array，Map，List，处理一堆·····
+				 * 二、1、如果IEat类型，找出所有的实现类bean，可能有一个bean，也可能有多个bean
+				 *    2、如果只有一个bean，就直接返回
+				 *    如果有多个bean，优先取 Primary ，然后 priority ，最后是根据field-name匹配bd-name
+				 *                            经过三个处理还没有话，就报NotUnique
+				 */
 				result = doResolveDependency(descriptor, requestingBeanName, autowiredBeanNames, typeConverter);
 			}
 			return result;
@@ -1127,7 +1135,8 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			if (shortcut != null) {
 				return shortcut;
 			}
-
+            // 获取bean的类型，目的就是先尝试通过类型找到容器中的所有bean，因为一个接口会有多个实现类，都把它找出来
+			// 注意这个type可不一定是Person 或者 Dog,还可能是java.util.Map
 			Class<?> type = descriptor.getDependencyType();
 			Object value = getAutowireCandidateResolver().getSuggestedValue(descriptor);
 			if (value != null) {
@@ -1141,12 +1150,16 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 						converter.convertIfNecessary(value, type, descriptor.getField()) :
 						converter.convertIfNecessary(value, type, descriptor.getMethodParameter()));
 			}
-
+			/**  multipleBeans什么时候不是null？ type是 Array、Map、List时，multipleBeans就不是null，跟它的名字一样：多个bean
+			 *   这是个超级牛逼的方法，一定要点进去看，很给力！！！！
+			 */
 			Object multipleBeans = resolveMultipleBeans(descriptor, beanName, autowiredBeanNames, typeConverter);
 			if (multipleBeans != null) {
 				return multipleBeans;
 			}
-
+			/**
+			 * 通过接口IEat类型，可能会找出多个实现类，这时这个map的size就会大于1
+			 */
 			Map<String, Object> matchingBeans = findAutowireCandidates(beanName, type, descriptor);
 			if (matchingBeans.isEmpty()) {
 				if (isRequired(descriptor)) {
@@ -1159,6 +1172,11 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			Object instanceCandidate;
 
 			if (matchingBeans.size() > 1) {
+				/**
+				 * 一个接口有多个实现类的话，这个size就会大于1
+				 * 然后进入这个方法，matchingBeans这个map中，寻找最合适的bean
+				 * 里面就做了三步，primary  ->  priority -> 遍历匹配名字
+				 */
 				autowiredBeanName = determineAutowireCandidate(matchingBeans, descriptor);
 				if (autowiredBeanName == null) {
 					if (isRequired(descriptor) || !indicatesMultipleBeans(type)) {
@@ -1175,6 +1193,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 			else {
 				// We have exactly one match.
+				// 根据类型只找到了一个bean，那就直接返回就行
 				Map.Entry<String, Object> entry = matchingBeans.entrySet().iterator().next();
 				autowiredBeanName = entry.getKey();
 				instanceCandidate = entry.getValue();
@@ -1206,9 +1225,11 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	@Nullable
 	private Object resolveMultipleBeans(DependencyDescriptor descriptor, @Nullable String beanName,
 			@Nullable Set<String> autowiredBeanNames, @Nullable TypeConverter typeConverter) {
-
+		/**
+		 * 这个方法真是超级牛逼，绝对是@Autowire的精髓之一
+		 */
 		Class<?> type = descriptor.getDependencyType();
-		if (type.isArray()) {
+		if (type.isArray()) {//  IEat [] result -> 是个数组。会找出所有的IEat类型的bean，放到数组里
 			Class<?> componentType = type.getComponentType();
 			ResolvableType resolvableType = descriptor.getResolvableType();
 			Class<?> resolvedArrayType = resolvableType.resolve();
@@ -1235,6 +1256,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			return result;
 		}
 		else if (Collection.class.isAssignableFrom(type) && type.isInterface()) {
+			// List<IEat> result -> 是个Collection 并且加了泛型，否则elementType是null
 			Class<?> elementType = descriptor.getResolvableType().asCollection().resolveGeneric();
 			if (elementType == null) {
 				return null;
@@ -1254,16 +1276,20 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 			return result;
 		}
-		else if (Map.class == type) {
+		else if (Map.class == type) { //  Map<String,IEat> result -> 是java.util.Map
 			ResolvableType mapType = descriptor.getResolvableType().asMap();
+			// 获取这个Map的泛型的，key值 ->  Map<String,IEat> result;
 			Class<?> keyType = mapType.resolveGeneric(0);
 			if (String.class != keyType) {
+				//如果泛型不是String类型，直接返回null
 				return null;
 			}
+			// 获取这个Map的泛型的，value值，这个value值就是类类型  ->  Map<String,IEat> result;
 			Class<?> valueType = mapType.resolveGeneric(1);
 			if (valueType == null) {
 				return null;
 			}
+			// 找出了类类型，也即是IEat，最终调用的还是根据IEat找出所有的实现类  -> findAutowireCandidates()
 			Map<String, Object> matchingBeans = findAutowireCandidates(beanName, valueType,
 					new MultiElementDescriptor(descriptor));
 			if (matchingBeans.isEmpty()) {
@@ -1322,9 +1348,16 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	protected Map<String, Object> findAutowireCandidates(
 			@Nullable String beanName, Class<?> requiredType, DependencyDescriptor descriptor) {
 
+		/**
+		 * 最终调用的是beanFactory的根据类型获取所有bd名字的方法。也就是能找到所有实现接口IEat的实现类的bdName
+		 * 注意：如果requiredType是java.util.Map的话找出来的就是另一种东西了
+		 */
 		String[] candidateNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 				this, requiredType, true, descriptor.isEager());
 		Map<String, Object> result = new LinkedHashMap<>(candidateNames.length);
+		/**
+		 * 上面已经找出所有IEat接口类型的bdName，下面就是遍历candidateNames，根据bdName找出所有bean
+		 */
 		for (Class<?> autowiringType : this.resolvableDependencies.keySet()) {
 			if (autowiringType.isAssignableFrom(requiredType)) {
 				Object autowiringValue = this.resolvableDependencies.get(autowiringType);
@@ -1390,15 +1423,22 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	@Nullable
 	protected String determineAutowireCandidate(Map<String, Object> candidates, DependencyDescriptor descriptor) {
 		Class<?> requiredType = descriptor.getDependencyType();
+		//  这一步就是找出 加了@Primary注解的 bean，如果都没加，就返回空。
+		// primaryCandidate就是加了@Primary注解的bean的名字
 		String primaryCandidate = determinePrimaryCandidate(candidates, requiredType);
 		if (primaryCandidate != null) {
 			return primaryCandidate;
 		}
+		// 上一步为空的话，再看看谁的优先级高就返回谁
 		String priorityCandidate = determineHighestPriorityCandidate(candidates, requiredType);
 		if (priorityCandidate != null) {
 			return priorityCandidate;
 		}
-		// Fallback
+		/**
+		 * 前面两步，如果没找到 primary，priority的bean，
+		 * 那就遍历，通过属性的名字的去挨个匹配，只要有一个field-name匹配的上，就返回这个bd名字
+		 * descriptor.getDependencyName() 就是获取属性的名字
+		 */
 		for (Map.Entry<String, Object> entry : candidates.entrySet()) {
 			String candidateName = entry.getKey();
 			Object beanInstance = entry.getValue();

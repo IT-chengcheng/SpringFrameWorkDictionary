@@ -595,7 +595,14 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 				Assert.state(beanFactory != null, "No BeanFactory available");
 				TypeConverter typeConverter = beanFactory.getTypeConverter();
 				try {
-					//如果filed是个map，这个value值就是个map，而且里面的key，value已经赋值完成了。只需要将value赋值给filed即可
+					/**
+					 * 做了两大件事
+					 * 一、如果field是 Array，Map，List，处理一堆·····，直接返回
+					 * 二、1、如果IEat类型，找出所有的实现类bean，可能有一个bean，也可能有多个bean
+					 *    2、如果只有一个bean，就直接返回
+					 *    如果有多个bean，优先取 Primary ，然后 priority ，最后是根据field-name匹配bd-name
+					 *                            经过三个处理还没有话，就报NotUnique
+					 */
 					value = beanFactory.resolveDependency(desc, beanName, autowiredBeanNames, typeConverter);
 				}
 				catch (BeansException ex) {
