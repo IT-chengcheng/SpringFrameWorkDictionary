@@ -597,7 +597,7 @@ public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBean
 				try {
 					/**
 					 * 做了两大件事
-					 * 一、如果field是 Array，Map，List，处理一堆·····，直接返回
+					 * 一、如果field是 Array，Map（HashMap,TreeMap等），Collection（List，Set等），处理一堆·····，直接返回
 					 * 二、1、如果IEat类型，找出所有的实现类bean，可能有一个bean，也可能有多个bean
 					 *    2、如果只有一个bean，就直接返回
 					 *    如果有多个bean，优先取 Primary ，然后 priority ，最后是根据field-name匹配bd-name

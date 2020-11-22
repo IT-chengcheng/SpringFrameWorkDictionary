@@ -158,6 +158,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 
 	/** Logger used by this class. Available to subclasses. */
+	/**
+	 * 注意spring用的是jcl，LogFactory在这个包中org.apache.commons.logging
+	 */
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	/** Unique id for this context, if any */
@@ -617,6 +620,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		this.active.set(true);
 
 		if (logger.isInfoEnabled()) {
+			//点进这个类看一下，详细看一下spring的日志体系，结合笔记看
 			logger.info("Refreshing " + this);
 		}
 

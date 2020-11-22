@@ -1113,7 +1113,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			if (result == null) {
 				/**
 				 * 做了两大件事
-				 * 一、如果field是 Array，Map，List，处理一堆·····
+				 * 一、如果field是 Array，Map（HashMap,TreeMap等），Collection（List，Set等），处理一堆·····
 				 * 二、1、如果IEat类型，找出所有的实现类bean，可能有一个bean，也可能有多个bean
 				 *    2、如果只有一个bean，就直接返回
 				 *    如果有多个bean，优先取 Primary ，然后 priority ，最后是根据field-name匹配bd-name
@@ -1256,7 +1256,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			return result;
 		}
 		else if (Collection.class.isAssignableFrom(type) && type.isInterface()) {
-			// List<IEat> result -> 是个Collection 并且加了泛型，否则elementType是null
+			// List<IEat> result -> 是个Collection（List，Set等） 并且加了泛型，否则elementType是null
 			Class<?> elementType = descriptor.getResolvableType().asCollection().resolveGeneric();
 			if (elementType == null) {
 				return null;
@@ -1276,7 +1276,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 			return result;
 		}
-		else if (Map.class == type) { //  Map<String,IEat> result -> 是java.util.Map
+		else if (Map.class == type) { //  Map<String,IEat> result -> 是java.util.Map（HashMap,TreeMap等），
 			ResolvableType mapType = descriptor.getResolvableType().asMap();
 			// 获取这个Map的泛型的，key值 ->  Map<String,IEat> result;
 			Class<?> keyType = mapType.resolveGeneric(0);

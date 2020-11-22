@@ -62,12 +62,21 @@ import org.slf4j.spi.LocationAwareLogger;
  */
 public abstract class LogFactory {
 
+	// 默认用java.util.logging打印日志，这是JDK自带的
 	private static LogApi logApi = LogApi.JUL;
 
 	static {
+		/**
+		 * 这个方式很吊，通过不断的try-catch，判断程序员是否依赖了某个日志jar包，比如log4j
+		 * LogApi是个枚举，一共四种类型：LOG4J, SLF4J_LAL, SLF4J, JUL
+		 */
 		ClassLoader cl = LogFactory.class.getClassLoader();
 		try {
 			// Try Log4j 2.x API
+			/**
+			 * 前面默认是JUL,这里首先会加载log4j类，这个类在log4j-API下，如果有，就用
+			 * log4j输出日志
+			 */
 			cl.loadClass("org.apache.logging.log4j.spi.ExtendedLogger");
 			logApi = LogApi.LOG4J;
 		}
@@ -104,8 +113,14 @@ public abstract class LogFactory {
 	 * @param name logical name of the <code>Log</code> instance to be returned
 	 */
 	public static Log getLog(String name) {
+		/**
+		 * 前面有个static静态代码块，已经将logApi赋值，默认是jul，但是静态代码块会尝试加载其他日志框架类，比如log4j
+		 */
 		switch (logApi) {
 			case LOG4J:
+				//如果项目中依赖log4j的jar包，就会使用log4j打印日志。两个jar包分别是：log4j-core  + log4j-api
+				//加了依赖后，不需要改任何代码，就会自动使用log4j打印日志，这就是使用jcl（commons-logging）的好处。
+				//但是 spring-boot默认使用的slf4j，用的是logback组件
 				return Log4jDelegate.createLog(name);
 			case SLF4J_LAL:
 				return Slf4jDelegate.createLocationAwareLog(name);
