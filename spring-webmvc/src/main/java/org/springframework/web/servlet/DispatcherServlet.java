@@ -922,6 +922,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		}
 
 		try {
+			// web请求3
 			doDispatch(request, response);
 		}
 		finally {
@@ -946,6 +947,11 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * @throws Exception in case of any kind of processing failure
 	 */
 	protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		/**
+		 * 这个方法是重中之重
+		 */
+
+
 		HttpServletRequest processedRequest = request;
 		HandlerExecutionChain mappedHandler = null;
 		boolean multipartRequestParsed = false;
@@ -988,6 +994,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				}
 
 				// Actually invoke the handler.
+				// web请求5
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
 				if (asyncManager.isConcurrentHandlingStarted()) {

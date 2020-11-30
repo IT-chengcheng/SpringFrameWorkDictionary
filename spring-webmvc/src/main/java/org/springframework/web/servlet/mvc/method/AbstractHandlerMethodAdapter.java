@@ -83,7 +83,7 @@ public abstract class AbstractHandlerMethodAdapter extends WebContentGenerator i
 	@Nullable
 	public final ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {
-
+         // web请求6
 		return handleInternal(request, response, (HandlerMethod) handler);
 	}
 

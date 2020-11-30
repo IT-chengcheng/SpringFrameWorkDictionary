@@ -862,7 +862,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	@Override
 	protected final void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-
+      // web请求1， 这是javax.httpservlet直接调用的这，这就是这个类的父类Genricservlet
 		processRequest(request, response);
 	}
 
@@ -971,6 +971,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		initContextHolders(request, localeContext, requestAttributes);
 
 		try {
+			// web请求2
 			doService(request, response);
 		}
 		catch (ServletException | IOException ex) {
