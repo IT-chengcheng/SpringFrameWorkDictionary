@@ -44,6 +44,12 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  * @author David Syer
  * @since 3.1
  */
+
+/**
+ * 是Spring内部的一种配置方式，采用JavaBean的形式来代替传统的xml配置文件形式进行针对框架个性化定制，
+ * 可以自定义一些Handler，Interceptor，ViewResolver，MessageConverter(之前都是在web.xml配置，现在通过实现该接口，直接编码配置)
+ * 基于java-based方式的spring mvc配置，需要创建一个配置类并实现WebMvcConfigurer 接口
+ */
 public interface WebMvcConfigurer {
 
 	/**
@@ -100,6 +106,7 @@ public interface WebMvcConfigurer {
 	 * {@link org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport
 	 * WebMvcConfigurationSupport} and then override {@code resourceHandlerMapping}.
 	 */
+	/* 拦截器配置 */
 	default void addInterceptors(InterceptorRegistry registry) {
 	}
 
@@ -115,6 +122,7 @@ public interface WebMvcConfigurer {
 	 * Configure cross origin requests processing.
 	 * @since 4.2
 	 */
+	/** 解决跨域问题 **/
 	default void addCorsMappings(CorsRegistry registry) {
 	}
 
@@ -125,6 +133,7 @@ public interface WebMvcConfigurer {
 	 * home page, perform simple site URL redirects, return a 404 status with
 	 * HTML content, a 204 with no content, and more.
 	 */
+	/* 视图跳转控制器 */
 	default void addViewControllers(ViewControllerRegistry registry) {
 	}
 

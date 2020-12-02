@@ -1,11 +1,15 @@
 # 基于spring-framework-5.0的源码分析
 
-* BeanPostProcessor
-
-* BeanFactoryPostProcesor
-
-* ImportSelector
-
-* ImportBeanRegistar
-
-* And so on
+## 涉及内容
++ 1、框架的设计分析
++ 2、类以及方法的解析，注释
++ 3、功能的实现原理，调用过程
++ 4、核心接口，类，方法以及属性的全面解析
+## 使用方式
++ 1、先从官网下载Spring-framework-5.0源码，并且编译运行通过，保证可以用源码写Demo
++ 2、找一个具体突破口，比如@Autowire的运行原理，根据该手册进行一步步分析
++ 3、此手册就是一部Spring字典，作为一个工具手册去分析Spring源码，Spring绝大部分核心技术都可以从此手册找到分析
+## 提醒
++ 务必要让自己可以断点调试源码，不然只看文字分析，很难找到分析源码的感觉，所以搞定Spring源码的最佳方式：
+   * 一是断点调试源码
+   * 二是看此手册
