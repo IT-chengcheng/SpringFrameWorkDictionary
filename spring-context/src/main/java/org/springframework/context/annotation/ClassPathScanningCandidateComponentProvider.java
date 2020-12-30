@@ -425,8 +425,8 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 			//asm 读取class文件，
 			//-->>startScan12  这里就是拿到所有.class文件的路径，放到数组里,注意是所有的.class文件！
 			Resource[] resources = getResourcePatternResolver().getResources(packageSearchPath);
-			// F:\xx\Spring\xx\spring-framework-5.0.x\lubanIoc\out\production\classes\com\luban\anno\EanbleLuabn.class
-			// F:\xx\Spring\xx\spring-framework-5.0.x\lubanIoc\out\production\classes\com\luban\app\Car.class
+			// F:\xx\Spring\xx\spring-framework-5.0.x\DemoTest\out\production\classes\com\test\anno\Eanbletest.class
+			// F:\xx\Spring\xx\spring-framework-5.0.x\DemoTest\out\production\classes\com\test\app\Car.class
 
 			boolean traceEnabled = logger.isTraceEnabled();
 			boolean debugEnabled = logger.isDebugEnabled();

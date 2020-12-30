@@ -100,7 +100,7 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 
 		// 2、找出了切面类后，再看切面里切点的表达式，是否包含了beanClass的其中一个方法。如果是，就为这个类创建代理
 		// 一步步进去看，很关键，
-		// 切点表达式：@Pointcut("execution(public * com.luban.app..*.*(..))")
+		// 切点表达式：@Pointcut("execution(public * com.test.app..*.*(..))")
 		List<Advisor> eligibleAdvisors = findAdvisorsThatCanApply(candidateAdvisors, beanClass, beanName);
 		extendAdvisors(eligibleAdvisors);
 		if (!eligibleAdvisors.isEmpty()) {

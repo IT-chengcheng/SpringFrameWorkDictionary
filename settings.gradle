@@ -29,6 +29,6 @@ rootProject.name = "spring"
 rootProject.children.each {project ->
 	project.buildFileName = "${project.name}.gradle"
 }
-include 'lubanIoc'
-include 'spring-cglib1'
+
+include 'DemoTest'
 

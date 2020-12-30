@@ -253,7 +253,7 @@ public abstract class AopUtils {
 					//targetClass也就是Person，的所有方法，以及Person所实现接口的所有的方法，只要有一个方法匹配上切点的表达式
 					//就直接返回true。换句话说：只要该类的方法以及所实现接口的所有的方法只要有一个满足切点的表达式，那就创建代理
 					// 这里很关键，也是AOP的核心之一
-					// 切点表达式：@Pointcut("execution(public * com.luban.app..*.*(..))")
+					// 切点表达式：@Pointcut("execution(public * com.test.app..*.*(..))")
 					return true;
 				}
 			}

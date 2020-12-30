@@ -1,9 +1,7 @@
-plugins {
-    id 'java'
-}
-
 group 'org.springframework'
 version '5.0.11.BUILD-SNAPSHOT'
+
+apply plugin: 'java'
 
 sourceCompatibility = 1.8
 

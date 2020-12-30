@@ -172,7 +172,7 @@ class ConstructorResolver {
 				resolvedValues = new ConstructorArgumentValues();
 				/**
 				 * 确定构造方法参数数量,假设有如下配置：
-				 *     <bean id="luban" class="com.luban.Luban">
+				 *     <bean id="test" class="com.ai.test">
 				 *         <constructor-arg index="0" value="str1"/>
 				 *         <constructor-arg index="1" value="1"/>
 				 *         <constructor-arg index="2" value="str2"/>
@@ -204,12 +204,12 @@ class ConstructorResolver {
 			/**
 			 *  有限反问权限，继而参数个数
 			 *  这个自己可以写个测试去看看
-			 * 1. public Luban(Object o1, Object o2, Object o3)
-			 * 2. public Luban(Object o1, Object o2)
-			 * 3. public Luban(Object o1)
-			 * 4. protected Luban(Integer i, Object o1, Object o2, Object o3)
-			 * 5. protected Luban(Integer i, Object o1, Object o2)
-			 * 6. protected Luban(Integer i, Object o1)
+			 * 1. public Person(Object o1, Object o2, Object o3)
+			 * 2. public Person(Object o1, Object o2)
+			 * 3. public Person(Object o1)
+			 * 4. protected Person(Integer i, Object o1, Object o2, Object o3)
+			 * 5. protected Person(Integer i, Object o1, Object o2)
+			 * 6. protected Person(Integer i, Object o1)
 			 */
 			AutowireUtils.sortConstructors(candidates);
 			//定义了一个差异变量，这个变量很有分量，后面有注释
@@ -228,7 +228,7 @@ class ConstructorResolver {
 				 * 就会赋值给这个变量（下面注释有写）。故而如果这个变量不等于null就不需要再进行解析了，说明spring已经
 				 * 找到一个合适的构造方法，直接使用便可以
 				 * argsToUse.length > paramTypes.length这个代码就相当复杂了
-				 * 首先假设 argsToUse = [1,"luban"，obj]
+				 * 首先假设 argsToUse = [1,"person"，obj]
 				 * 那么回去匹配到上面的构造方法的1和5
 				 * 由于构造方法1有更高的访问权限，所有选择1，尽管5看起来更加匹配
 				 * 但是我们看2,直接参数个数就不对所以直接忽略
@@ -254,8 +254,8 @@ class ConstructorResolver {
 							if (pnd != null) {
 								//获取构造方法参数名称列表
 								/**
-								 * 假设你有一个（String luban,Object zilu）
-								 * 则paramNames=[luban,zilu]
+								 * 假设你有一个（String person,Object car）
+								 * 则paramNames=[test,car]
 								 */
 								paramNames = pnd.getParameterNames(candidate);
 							}

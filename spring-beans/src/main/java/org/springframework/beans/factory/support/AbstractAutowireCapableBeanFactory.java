@@ -1075,7 +1075,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			// 不是程序员定义的，并且bd是否实现InstantiationAwareBeanPostProcessor接口
 			if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
 				// 获取bd的类类型，比如 org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator
-				// com.luban.app.Car
+				// com.app.Car
 				Class<?> targetType = determineTargetType(beanName, mbd);
 				if (targetType != null) {
 					//干扰bean的创建  -> Instantiation
