@@ -3,6 +3,8 @@ package com.bean;
 import com.annotation.Eat;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
+
 /**
  * @author:chengcheng
  * @date:2020.12.30
@@ -10,4 +12,6 @@ import org.springframework.stereotype.Component;
 @Eat
 @Component
 public class Dog {
+
+
 }

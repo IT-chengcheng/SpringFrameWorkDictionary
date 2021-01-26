@@ -1,5 +1,6 @@
 package com;
 
+import com.Interface.IRun;
 import com.annotation.Eat;
 import com.config.CglibConfig;
 import com.config.Configure;
@@ -22,6 +23,9 @@ public class StartMain {
 		AnnotationConfigApplicationContext c = new AnnotationConfigApplicationContext();
 		c.register(Configure.class);
 		c.refresh();
+
+
+		//IRun var  = c.getBean(IRun.class);
 
 		System.out.println(c.getBean("person"));
 

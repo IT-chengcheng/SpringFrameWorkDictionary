@@ -1,13 +1,13 @@
-package com.bean;
+package com.dao;
 
 import com.Interface.IRun;
 import org.springframework.stereotype.Component;
 
 /**
  * @author:chengcheng
- * @date:2020.12.30
+ * @date:2021.01.26
  */
-@Component
+@Component("daoPerson")
 public class Person implements IRun {
 	@Override
 	public void run() {
