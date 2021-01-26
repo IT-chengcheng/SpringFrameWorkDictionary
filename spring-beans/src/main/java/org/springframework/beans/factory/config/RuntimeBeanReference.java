@@ -20,9 +20,43 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * Immutable placeholder class used for a property value object when it's
- * a reference to another bean in the factory, to be resolved at runtime.
+ * Immutable 不变的 placeholder class used for a property value object when it's
+ * a reference to another bean in the factory, to be resolved at runtime.。
  *
+ * Spring中RuntimeBeanReference的作用：
+ *    我们在定义一个BeanDefinition时，可以直接给某些属性赋“值”：
+     1. value：值
+     2. Reference：beanName
+
+ 给属性xx赋值字符串b：
+ BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition();
+ builder.addPropertyValue("xx", "b");
+ AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
+ beanDefinition.setBeanClass(A.class);
+ registry.registerBeanDefinition("a", beanDefinition);
+
+
+ 给属性xx赋值一个bean对象，"b"表示bean的名字：
+ BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition();
+ builder.addPropertyReference("xx", "b");
+ AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
+ beanDefinition.setBeanClass(A.class);
+ registry.registerBeanDefinition("a", beanDefinition);
+
+
+ 如果属性的类型是一个List，那么该如何赋值呢？可以利用RuntimeBeanReference：
+ BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition();
+
+ ManagedList<RuntimeBeanReference> runtimeBeanReferences = new ManagedList<>();
+ runtimeBeanReferences.add(new RuntimeBeanReference("b1"));
+ runtimeBeanReferences.add(new RuntimeBeanReference("b2"));
+ builder.addPropertyValue("xx", runtimeBeanReferences);
+
+ AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
+ beanDefinition.setBeanClass(A.class);
+ registry.registerBeanDefinition("a", beanDefinition);
+
+
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @see BeanDefinition#getPropertyValues()

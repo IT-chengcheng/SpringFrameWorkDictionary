@@ -107,6 +107,7 @@ class BeanDefinitionValueResolver {
 		// to another bean to be resolved.
 		if (value instanceof RuntimeBeanReference) {
 			RuntimeBeanReference ref = (RuntimeBeanReference) value;
+			// 处理 RuntimeBeanReference
 			return resolveReference(argName, ref);
 		}
 		else if (value instanceof RuntimeBeanNameReference) {
@@ -350,6 +351,7 @@ class BeanDefinitionValueResolver {
 	 */
 	@Nullable
 	private Object resolveReference(Object argName, RuntimeBeanReference ref) {
+		// 处理 RuntimeBeanReference
 		try {
 			Object bean;
 			String refName = ref.getBeanName();

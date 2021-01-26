@@ -112,7 +112,7 @@ class ConstructorResolver {
 			@Nullable Constructor<?>[] chosenCtors, @Nullable Object[] explicitArgs) {
 		//实力一个BeanWrapperImpl 对象很好理解
 		//前面外部返回的BeanWrapper 其实就是这个BeanWrapperImpl
-		//因为BeanWrapper是个接口.
+		//因为BeanWrapper是个接口
 		BeanWrapperImpl bw = new BeanWrapperImpl();
 		this.beanFactory.initBeanWrapper(bw);
 
@@ -143,6 +143,7 @@ class ConstructorResolver {
 				}
 			}
 			if (argsToResolve != null) {
+				// 处理 RuntimeBeanReference
 				argsToUse = resolvePreparedArguments(beanName, mbd, bw, constructorToUse, argsToResolve);
 			}
 		}
@@ -878,6 +879,7 @@ class ConstructorResolver {
 				argValue = resolveAutowiredArgument(methodParam, beanName, null, converter);
 			}
 			else if (argValue instanceof BeanMetadataElement) {
+				// 处理 RuntimeBeanReference
 				argValue = valueResolver.resolveValueIfNecessary("constructor argument", argValue);
 			}
 			else if (argValue instanceof String) {
