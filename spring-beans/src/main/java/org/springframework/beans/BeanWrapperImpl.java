@@ -329,6 +329,7 @@ public class BeanWrapperImpl extends AbstractNestablePropertyAccessor implements
 			}
 			else {
 				ReflectionUtils.makeAccessible(writeMethod);
+				//  通过反射执行 setxxx(Dog dog)
 				writeMethod.invoke(getWrappedInstance(), value);
 			}
 		}

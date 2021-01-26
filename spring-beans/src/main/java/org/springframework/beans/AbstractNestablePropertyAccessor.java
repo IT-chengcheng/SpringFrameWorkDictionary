@@ -263,6 +263,7 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 			if (nestedPa == this) {
 				pv.getOriginalPropertyValue().resolvedTokens = tokens;
 			}
+			//  通过反射执行 setxxx(Dog dog)
 			nestedPa.setPropertyValue(tokens, pv);
 		}
 		else {
@@ -275,6 +276,7 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 			processKeyedProperty(tokens, pv);
 		}
 		else {
+			//  通过反射执行 setxxx(Dog dog)
 			processLocalProperty(tokens, pv);
 		}
 	}
@@ -455,6 +457,7 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 				}
 				pv.getOriginalPropertyValue().conversionNecessary = (valueToApply != originalValue);
 			}
+			//  通过反射执行 setxxx(Dog dog)
 			ph.setValue(valueToApply);
 		}
 		catch (TypeMismatchException ex) {

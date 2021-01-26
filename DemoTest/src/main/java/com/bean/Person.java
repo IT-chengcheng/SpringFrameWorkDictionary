@@ -13,4 +13,14 @@ public class Person implements IRun {
 	public void run() {
 
 	}
+	public void setAbf(Dog abf){
+		System.out.println("");
+
+	}
+	public void setTest(Cat abf){
+
+	}
+	public void setffffTst(Dog abf){
+
+	}
 }

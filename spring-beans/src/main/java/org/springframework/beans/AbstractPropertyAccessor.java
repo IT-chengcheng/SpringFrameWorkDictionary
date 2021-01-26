@@ -74,6 +74,7 @@ public abstract class AbstractPropertyAccessor extends TypeConverterSupport impl
 
 	@Override
 	public void setPropertyValues(PropertyValues pvs) throws BeansException {
+		//  通过反射执行 setxxx(Dog dog)
 		setPropertyValues(pvs, false, false);
 	}
 
@@ -94,6 +95,8 @@ public abstract class AbstractPropertyAccessor extends TypeConverterSupport impl
 				// This method may throw any BeansException, which won't be caught
 				// here, if there is a critical failure such as no matching field.
 				// We can attempt to deal only with less serious exceptions.
+
+				//  通过反射执行 setxxx(Dog dog)
 				setPropertyValue(pv);
 			}
 			catch (NotWritablePropertyException ex) {

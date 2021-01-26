@@ -2,6 +2,7 @@ package com;
 
 import com.Interface.IRun;
 import com.annotation.Eat;
+import com.beanPostProcessor.Bpp1;
 import com.config.CglibConfig;
 import com.config.Configure;
 import org.springframework.cglib.core.SpringNamingPolicy;
@@ -21,6 +22,7 @@ public class StartMain {
 	public static void main(String[] args) {
 		//ClassPathXmlApplicationContext d = new ClassPathXmlApplicationContext();
 		AnnotationConfigApplicationContext c = new AnnotationConfigApplicationContext();
+		c.addBeanFactoryPostProcessor(new Bpp1());
 		c.register(Configure.class);
 		c.refresh();
 

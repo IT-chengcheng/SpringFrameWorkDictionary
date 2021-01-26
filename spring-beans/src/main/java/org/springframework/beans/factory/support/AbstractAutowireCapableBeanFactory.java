@@ -1408,12 +1408,25 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			MutablePropertyValues newPvs = new MutablePropertyValues(pvs);
 			// Add property values based on autowire by name if applicable.
 			if (mbd.getResolvedAutowireMode() == AUTOWIRE_BY_NAME) {
+				// 仔细看这个方法
 				autowireByName(beanName, mbd, bw, newPvs);
 			}
 			// Add property values based on autowire by type if applicable.
 			if (mbd.getResolvedAutowireMode() == AUTOWIRE_BY_TYPE) {
+				// 仔细看这个方法
 				autowireByType(beanName, mbd, bw, newPvs);
 			}
+			 /* 最终 pvs 里面是这样的
+			  * 1、
+			  *   fabc ：Dog 实例化完成的类
+			  *   rabc ：Person 实例化完成的类
+			  *      c  ：Dark 实例化完成的类
+			  *  有几个  public void setFabc(Dog d) 形如这样的setXX方法 ，pvs就有几个值
+			  *
+			   * 2、手动调用方法添加的 definition.getPropertyValues().add("addToConfig", this.addToConfig);
+			  *
+			  *  pvs = newPvs = 1 + 2
+			  */
 			pvs = newPvs;
 		}
 
@@ -1450,13 +1463,23 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 		}
 
-		if (pvs != null) {// 这是给bean的属性赋值的其中一个入口（一共两个，这是第二个），前提是pvs不为空，从哪获取？看上面
+		if (pvs != null) {
+			/**
+			 * 这是给bean的属性赋值的其中一个入口（一共两个，这是第二个），前提是pvs不为空，从哪获取？ 两个渠道：
+			 * 1、主动执行 definition.getPropertyValues().add("sqlSessionFactory", this.sqlSessionFactory);
+			 * 2、设置为自动装配 AutowireMode() == AUTOWIRE_BY_TYPE ；AutowireMode() == AUTOWIRE_BY_NAME
+			 *   具体来源看上面解析
+			 */
 			applyPropertyValues(beanName, mbd, bw, pvs);
 		}
 		/** 最终总结：给bean的属性赋值的方法就两种
 		 * 1、通过 InstantiationAwareBeanPostProcessor拓展方法 -> postProcessPropertyValues()，前提是加了@Autowire @Resource
-		 * 2、没加注解的话，手动设置了bd.setAutowireMode = AUTOWIRE_BY_TYPE，会将符合规则的set方法提取出来作为PropertyValues，
-		 *    执行 applyPropertyValues(beanName, mbd, bw, pvs);
+		 * 2、没加注解的话，
+		 *     a.手动设置了bd.setAutowireMode = AUTOWIRE_BY_TYPE  ,AUTOWIRE_BY_NAME，
+		 *           spring会将符合规则的 bean放到 pvs中
+		 *    b. 主动执行 definition.getPropertyValues().add("sqlSessionFactory", this.sqlSessionFactory);
+		 *           将bean 放到 pvs中
+		 *     最终 执行 applyPropertyValues(beanName, mbd, bw, pvs);
 		 */
 	}
 
@@ -1472,9 +1495,23 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	protected void autowireByName(
 			String beanName, AbstractBeanDefinition mbd, BeanWrapper bw, MutablePropertyValues pvs) {
 
+		/**
+		 * propertyNames获取的值是：set方法后面的字符串
+		 *    public void setFabc(Dog d)   -> propertyName=fabc   F小写了
+		 *    public void setrabc(Person d)   -> propertyName=rabc
+		 *    public void setc(Dark d)   -> propertyName=c
+		 * 也就是说 Person类 必须要有一个 setxxxx开头的方法
+		 */
 		String[] propertyNames = unsatisfiedNonSimpleProperties(mbd, bw);
+
 		for (String propertyName : propertyNames) {
 			if (containsBean(propertyName)) {
+				/**
+				 * 直接根据 set后面的字符串 获取bean，也就是说set方法必须要严格按照格式来，不能乱写
+				 *
+				 *   不正确 public void setcdfdf(Dark d)
+				 *   正确   public void setPerson(Person d)
+				 */
 				Object bean = getBean(propertyName);
 				pvs.add(propertyName, bean);
 				registerDependentBean(propertyName, beanName);
@@ -1512,6 +1549,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		Set<String> autowiredBeanNames = new LinkedHashSet<>(4);
+		/**
+		 * propertyNames获取的值是：set方法后面的字符串
+		 *    public void setFabc(Dog d)   -> propertyName=fabc   F小写了
+		 *    public void setrabc(Person d)   -> propertyName=rabc
+		 *    public void setc(Dark d)   -> propertyName=c
+		 * 也就是说 Person类 必须要有一个 setxxxx开头的方法
+		 */
 		String[] propertyNames = unsatisfiedNonSimpleProperties(mbd, bw);
 		for (String propertyName : propertyNames) {
 			try {
@@ -1519,12 +1563,26 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				// Don't try autowiring by type for type Object: never makes sense,
 				// even if it technically is a unsatisfied, non-simple property.
 				if (Object.class != pd.getPropertyType()) {
+					// 里面包含 当前setXX方法的信息，比如入参 类型
 					MethodParameter methodParam = BeanUtils.getWriteMethodParameter(pd);
 					// Do not allow eager init for type matching in case of a prioritized post-processor.
 					boolean eager = !PriorityOrdered.class.isInstance(bw.getWrappedInstance());
+					// 这个desc 是根据入参类型 封装的 desc
+					// 注意：加了@Autowire注解的属性，也会变成一个 DependencyDescriptor desc
+					// 也就是说：这两种情况调用的是同一个方法 resolveDependency(........)
 					DependencyDescriptor desc = new AutowireByTypeDependencyDescriptor(methodParam, eager);
+					// 从 容器中 拿到 实例化好的 bean,或者  List  Collection等
+					// 是根据setXXX方法入参的类型取的  public void setFabc(Dog d),也就是根据Dog类型取
 					Object autowiredArgument = resolveDependency(desc, beanName, autowiredBeanNames, converter);
 					if (autowiredArgument != null) {
+						/**
+						 * 仅仅是放到 pv里面去，还没有真正给某个属性赋值，或者反射执行某个方法
+						 * 最终 pvs 里面是这样的
+						 *      fabc ：Dog 实例化完成的类
+						 *      rabc ：Person 实例化完成的类
+						 *      c  ：Dark 实例化完成的类
+						 *  有几个  public void setFabc(Dog d) 形如这样的setXX方法 ，pvs就有几个值
+						 */
 						pvs.add(propertyName, autowiredArgument);
 					}
 					for (String autowiredBeanName : autowiredBeanNames) {
@@ -1658,6 +1716,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * @param pvs the new property values
 	 */
 	protected void applyPropertyValues(String beanName, BeanDefinition mbd, BeanWrapper bw, PropertyValues pvs) {
+
+		/**
+		 * 代码块的最后，通过反射执行 setxxx(Dog dog)
+		 */
 		if (pvs.isEmpty()) {
 			return;
 		}
@@ -1737,6 +1799,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Set our (possibly massaged) deep copy.
 		try {
+			//  通过反射执行 setxxx(Dog dog)
 			bw.setPropertyValues(new MutablePropertyValues(deepCopy));
 		}
 		catch (BeansException ex) {

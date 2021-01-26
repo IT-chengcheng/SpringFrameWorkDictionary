@@ -75,8 +75,8 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	/**
 	 在目标bean被实例化之前应用这个BeanPostProcessor。返回的bean对象可以是一个代理来代替目标bean，
 	 有效地抑制目标bean的默认实例化。如果此方法返回非空对象，则创建bean的过程将被短路。
-	 注意这里是 Instantiation ->   实例化
-	 父接口是   Initialization -> 初始化；赋初值
+	 注意这里是 Instantiation  /ɪnstænʃɪ'eɪʃən/  ->   实例化
+	 父接口是   Initialization /ɪˌnɪʃəlaɪˈzeɪʃn/ -> 初始化；赋初值
 	 */
 	@Nullable
 	default Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
