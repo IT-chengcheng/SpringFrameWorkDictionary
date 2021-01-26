@@ -1179,7 +1179,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		if (resolved) {
 			if (autowireNecessary) {
 				// 通过构造方法自动装配的方式构造 bean 对象
-				// 第二种创建bean的方式
+				// 第二种创建bean的方式.
 				return autowireConstructor(beanName, mbd, null, null);
 			}
 			else {
@@ -1344,7 +1344,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 */
 	protected BeanWrapper autowireConstructor(
 			String beanName, RootBeanDefinition mbd, @Nullable Constructor<?>[] ctors, @Nullable Object[] explicitArgs) {
-
+      // 执行创建 bean的构造方法
 		return new ConstructorResolver(this).autowireConstructor(beanName, mbd, ctors, explicitArgs);
 	}
 

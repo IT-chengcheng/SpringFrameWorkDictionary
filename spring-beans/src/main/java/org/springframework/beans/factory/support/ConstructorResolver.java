@@ -112,7 +112,7 @@ class ConstructorResolver {
 			@Nullable Constructor<?>[] chosenCtors, @Nullable Object[] explicitArgs) {
 		//实力一个BeanWrapperImpl 对象很好理解
 		//前面外部返回的BeanWrapper 其实就是这个BeanWrapperImpl
-		//因为BeanWrapper是个接口
+		//因为BeanWrapper是个接口.
 		BeanWrapperImpl bw = new BeanWrapperImpl();
 		this.beanFactory.initBeanWrapper(bw);
 
