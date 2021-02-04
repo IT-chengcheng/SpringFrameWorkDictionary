@@ -1,5 +1,6 @@
 package com.beanPostProcessor;
 
+import com.bean.Cat;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
@@ -14,5 +15,8 @@ public class Bpp1 implements BeanFactoryPostProcessor {
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
 		GenericBeanDefinition bd = (GenericBeanDefinition)beanFactory.getBeanDefinition("person");
 		bd.setAutowireMode(2);
+		bd.getPropertyValues().add("customCat",new Cat());
+
+
 	}
 }

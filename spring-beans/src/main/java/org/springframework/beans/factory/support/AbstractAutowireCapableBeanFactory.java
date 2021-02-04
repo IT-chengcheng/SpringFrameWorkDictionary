@@ -1574,6 +1574,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					// 从 容器中 拿到 实例化好的 bean,或者  List  Collection等
 					// 是根据setXXX方法入参的类型取的  public void setFabc(Dog d),也就是根据Dog类型取
 					Object autowiredArgument = resolveDependency(desc, beanName, autowiredBeanNames, converter);
+					// 这里有个判空，如果找不到 入参类型的 bean，就不放入pvs
 					if (autowiredArgument != null) {
 						/**
 						 * 仅仅是放到 pv里面去，还没有真正给某个属性赋值，或者反射执行某个方法

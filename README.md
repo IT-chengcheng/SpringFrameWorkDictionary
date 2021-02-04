@@ -1,16 +1,21 @@
-# 基于spring-framework-5.0的源码分析
+# 基于spring-framework-5.0的“源码”分析
 
-## 涉及内容
+## 涉及内容,包括但不限于：
 + 1、框架的设计分析
-+ 2、spring的启动流程
-+ 3、类以及方法的解析，注释
-+ 4、功能的实现原理，以及在源码中的调用链
-+ 4、核心接口，类，方法以及属性的全面解析
++ 2、Spring的启动流程
++ 3、BeanPostProcessor 、InstantiationAwareBeanPostProcessor  各种实现类源码分析
++ 4、BeanFactoryPostProcessor 、BeanDefinitionRegistryPostProcessor 各种实现类源码分析
++ 5、FactoryBean 源码分析
++ 6、BeanFactory 源码分析
++ 7、SpringAop 源码分析
++ 8、bean的完整实例化过程
++ 9、各种注解的源码分析：@Autowire、@Resource、@Component、@Configure、@PostConstruct、@Bean等等
++ 10、自动装配源码分析
++ 11、Spring整合Mybatis，整合Dubbo源码解析
++ 12、......等等等
 ## 使用方式
-+ 1、先从官网下载Spring-framework-5.0源码，并且编译运行通过，保证可以用源码写Demo
-+ 2、找一个具体突破口，比如@Autowire的运行原理，根据该手册进行一步步分析
-+ 3、此手册就是一部Spring字典，作为一个工具手册去分析Spring源码，Spring绝大部分核心技术都可以从此手册找到分析
-## 提醒
-+ 务必要让自己可以断点调试源码，不然只看文字分析，很难找到分析源码的感觉，所以搞定Spring源码的最佳方式：
-   * 一是断点调试源码
-   * 二是看此手册
++ 1、此工程就是源码工程，下载完成并且编译运行通过，保证可以断点调试
++ 2、熟读Spring官网，熟练使用Spring各种API。（对Spring的API不熟练，看源码就不会有方向，所以必须要对Spring的API非常熟悉）
++ 3、此手册是一部Spring**源码**字典，可以帮助你精通Spring源码，前提是一定要熟读Spring官网API！
+
+ 
