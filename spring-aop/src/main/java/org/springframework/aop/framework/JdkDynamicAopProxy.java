@@ -183,8 +183,10 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 
 			Object retVal;
 
-			if (this.advised.exposeProxy) {
+			if (this.advised.exposeProxy) {// 进入这个判断条件是：@EnableAspectJAutoProxy(exposeProxy = true)
 				// Make invocation available if necessary.
+				// 将当前代理对象设置到 AOP上下文中，有什么用呢:可以在被代理的对象中通过  AopContext.currentProxy()
+				// 拿到spring创建的代理对象，spring处理事务的时候，会用到这个功能
 				oldProxy = AopContext.setCurrentProxy(proxy);
 				setProxyContext = true;
 			}

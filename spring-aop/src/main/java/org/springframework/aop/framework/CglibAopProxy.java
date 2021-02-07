@@ -446,6 +446,8 @@ class CglibAopProxy implements AopProxy, Serializable {
 		public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
 			Object oldProxy = null;
 			try {
+				// 将当前代理对象设置到 AOP上下文中，有什么用呢:可以在被代理的对象中通过  AopContext.currentProxy()
+				// 拿到spring创建的代理对象，spring处理事务的时候，会用到这个功能
 				oldProxy = AopContext.setCurrentProxy(proxy);
 				Object retVal = methodProxy.invoke(this.target, args);
 				return processReturnType(proxy, this.target, method, retVal);

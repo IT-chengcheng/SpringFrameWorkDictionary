@@ -60,6 +60,7 @@ public abstract class AopContext {
 	 * AOP framework has not been configured to expose the proxy
 	 */
 	public static Object currentProxy() throws IllegalStateException {
+		// 从aop上下文中 获取spring创建的代理对象
 		Object proxy = currentProxy.get();
 		if (proxy == null) {
 			throw new IllegalStateException(
