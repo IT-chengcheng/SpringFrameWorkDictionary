@@ -27,6 +27,10 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 2.0.7
  */
+
+/**
+ * 就是一个bean的后置处理器，点入父类看看，作用就是查找需要被代理的bean，也就是类或者方法加了@Transactional的bean
+ */
 @SuppressWarnings("serial")
 public class InfrastructureAdvisorAutoProxyCreator extends AbstractAdvisorAutoProxyCreator {
 

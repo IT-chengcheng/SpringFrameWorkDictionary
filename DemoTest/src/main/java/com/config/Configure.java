@@ -1,7 +1,9 @@
 package com.config;
 
+import org.springframework.aop.framework.autoproxy.InfrastructureAdvisorAutoProxyCreator;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * @author:chengcheng
@@ -10,5 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @ComponentScan({"com.Bean","com.beanPostProcessor"})
 @Configuration
 //@ImportResource("classpath:spring.xml")
+@EnableTransactionManagement
 public class Configure {
+
 }

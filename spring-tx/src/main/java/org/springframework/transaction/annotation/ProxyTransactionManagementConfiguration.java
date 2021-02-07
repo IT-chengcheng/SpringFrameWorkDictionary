@@ -58,6 +58,9 @@ public class ProxyTransactionManagementConfiguration extends AbstractTransaction
 	@Bean
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public TransactionInterceptor transactionInterceptor() {
+		/**
+		 * TransactionInterceptor这个类就是执行 spring事务的核心类
+		 */
 		TransactionInterceptor interceptor = new TransactionInterceptor();
 		interceptor.setTransactionAttributeSource(transactionAttributeSource());
 		if (this.txManager != null) {

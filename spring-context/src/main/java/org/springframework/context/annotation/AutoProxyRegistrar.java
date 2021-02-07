@@ -56,6 +56,9 @@ public class AutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 	 */
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+		/**
+		 * 主要是注册一个bean    InfrastructureAdvisorAutoProxyCreator，这是个后置处理器
+		 */
 		boolean candidateFound = false;
 		Set<String> annoTypes = importingClassMetadata.getAnnotationTypes();
 		for (String annoType : annoTypes) {
