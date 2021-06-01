@@ -52,7 +52,7 @@ final class PostProcessorRegistrationDelegate {
 			ConfigurableListableBeanFactory beanFactory, List<BeanFactoryPostProcessor> beanFactoryPostProcessors) {
 
 		// Invoke BeanDefinitionRegistryPostProcessors first, if any.
-		// 存放的是所有已经执行了的processor。看这段英文翻译过来就是：优先执行BeanDefinitionRegistryPostProcessors接口类
+		// 存放的是所有已经执行完了方法的processor。看这段英文翻译过来就是：优先执行BeanDefinitionRegistryPostProcessors接口类
 		// 然后执行他的父类接口BeanFactoryPostProcessor的实现类
 		Set<String> processedBeans = new HashSet<>();
 
@@ -95,7 +95,7 @@ final class PostProcessorRegistrationDelegate {
 			//因为spring的工厂需要许解析去扫描等等功能
 			//而这些功能都是需要在spring工厂初始化完成之前执行
 			//要么在工厂最开始的时候、要么在工厂初始化之中，反正不能再之后
-			//因为如果在之后就没有意义，因为那个时候已经需要使用工厂了
+			//因为如果在之后就没有意义，因为那个时候已经不需要使用工厂了
 			//所以这里spring'在一开始就注册了一个BeanFactoryPostProcessor，用来插手springfactory的实例化过程
 			//在这个地方断点可以知道这个类叫做ConfigurationClassPostProcessor
 			//ConfigurationClassPostProcessor 做了超级多的事

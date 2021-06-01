@@ -21,21 +21,21 @@ public class StartMain {
 
 	public static void main(String[] args) {
 		//ClassPathXmlApplicationContext d = new ClassPathXmlApplicationContext();
-		AnnotationConfigApplicationContext c = new AnnotationConfigApplicationContext();
-		c.addBeanFactoryPostProcessor(new Bpp1());
+		AnnotationConfigApplicationContext c = new AnnotationConfigApplicationContext(Configure.class);
+		//c.addBeanFactoryPostProcessor(new Bpp1());
 		c.register(Configure.class);
 		c.refresh();
 
 
 		//IRun var  = c.getBean(IRun.class);
 
-		System.out.println(c.getBean("person"));
-
-        Map eatMap  =  c.getBeansWithAnnotation(Eat.class);
-        System.out.println("eatMap:"+eatMap);
-		for (String s : c.getBeanFactory().getBeanDefinitionNames()) {
-			System.out.println("bd:"+s);
-		}
+//		System.out.println(c.getBean("person"));
+//
+//        Map eatMap  =  c.getBeansWithAnnotation(Eat.class);
+//        System.out.println("eatMap:"+eatMap);
+//		for (String s : c.getBeanFactory().getBeanDefinitionNames()) {
+//			System.out.println("bd:"+s);
+//		}s
 	}
 
 	void  testCglib(){

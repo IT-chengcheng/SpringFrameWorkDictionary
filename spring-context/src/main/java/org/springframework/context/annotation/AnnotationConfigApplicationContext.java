@@ -88,7 +88,6 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * 默认构造函数，如果直接调用这个默认构造方法，需要在稍后通过调用其register()
 	 * 去注册配置类（javaconfig），并调用refresh()方法刷新容器，
 	 * 触发容器对注解Bean的载入、解析和注册过程
-	 * 这种使用过程我在ioc应用的第二节课讲@profile的时候讲过
 	 * Create a new AnnotationConfigApplicationContext that needs to be populated
 	 * through {@link #register} calls and then manually {@linkplain #refresh refreshed}.
 	 */

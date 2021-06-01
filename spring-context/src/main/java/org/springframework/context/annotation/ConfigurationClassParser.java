@@ -322,7 +322,7 @@ class ConfigurationClassParser {
 				//比如scope primary  lazy 等等，而且也将这些bd放入了beanfactory的beanDefinitionMap中  “person":bd, "dog":bd
 				// 真正开始扫描程序员加了注解的类
 				// 注意这是会反复的递归调用，因为扫描出A类，A类也注册到了bd-map中，然后呢再继续处理A类里面扫描包（如果有的话）
-				//处理完这个循环（就是A的扫描包也执行完了），下面的逻辑处理，比如A累的Import ImportResource等等，最上面的逻辑是处理PropertySources
+				//处理完这个循环（就是A的扫描包也执行完了），下面的逻辑处理，比如A类的Import ImportResource等等，最上面的逻辑是处理PropertySources
 				// 也就是说 ：上面处理@PropertySources，中间扫描注册，下面处理Import ImportResource等等。
 				//-->>startScan8  进入 ComponentScanAnnotationParser
 				Set<BeanDefinitionHolder> scannedBeanDefinitions =

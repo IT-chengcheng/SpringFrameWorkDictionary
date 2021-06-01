@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
 public class Bpp1 implements BeanFactoryPostProcessor {
 	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-		GenericBeanDefinition bd = (GenericBeanDefinition)beanFactory.getBeanDefinition("person");
-		bd.setAutowireMode(2);
-		bd.getPropertyValues().add("customCat",new Cat());
+		//GenericBeanDefinition bd = (GenericBeanDefinition)beanFactory.getBeanDefinition("person");
+		//bd.setAutowireMode(2);
+		//bd.getPropertyValues().add("customCat",new Cat());
 
 
 	}

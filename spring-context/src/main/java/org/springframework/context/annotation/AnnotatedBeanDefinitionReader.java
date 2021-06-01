@@ -264,7 +264,7 @@ public class AnnotatedBeanDefinitionReader {
 
 		/**
 		 * 如果在向容器注册注解Bean定义时，使用了额外的限定符注解则解析
-		 * 关于Qualifier和Primary前面的课当中讲过，主要涉及到spring的自动装配
+		 * 关于Qualifier和Primary，主要涉及到spring的自动装配
 		 * 这里需要注意的
 		 * byName和qualifiers这个变量是Annotation类型的数组，里面存不仅仅是Qualifier注解
 		 * 理论上里面里面存的是一切注解，所以可以看到下面的代码spring去循环了这个数组
@@ -276,7 +276,7 @@ public class AnnotatedBeanDefinitionReader {
 				if (Primary.class == qualifier) {
 					abd.setPrimary(true);
 				}
-				//懒加载，前面加过
+				//懒加载，
 				else if (Lazy.class == qualifier) {
 					abd.setLazyInit(true);
 				}

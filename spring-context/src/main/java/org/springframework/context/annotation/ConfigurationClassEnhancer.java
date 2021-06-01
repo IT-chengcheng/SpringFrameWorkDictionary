@@ -418,7 +418,6 @@ class ConfigurationClassEnhancer {
 					}
 				}
 				//beanFactory.getBean
-				//这个方法spring就写的非常牛逼，在bean实例化的章节会重点讲
 				Object beanInstance = (useArgs ? beanFactory.getBean(beanName, beanMethodArgs) :
 						beanFactory.getBean(beanName));
 				if (!ClassUtils.isAssignableValue(beanMethod.getReturnType(), beanInstance)) {

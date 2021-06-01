@@ -269,7 +269,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	 * {@link Configuration} classes.
 	 */
 	public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
-		//存放带有
+		//存放带有配置类 比如 @Configure注解的类， 加了@ImportResoure，实现了接口ImportSelector的类，还有beanRegistar
 		List<BeanDefinitionHolder> configCandidates = new ArrayList<>();
 		//获取容器中注册的所有bd名字
 		//7个，这个registry 就是 DefaultListableBeanFactory
@@ -283,7 +283,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			BeanDefinition beanDef = registry.getBeanDefinition(beanName);
 			if (ConfigurationClassUtils.isFullConfigurationClass(beanDef) ||
 					ConfigurationClassUtils.isLiteConfigurationClass(beanDef)) {
-				//果BeanDefinition中的configurationClass属性为full或者lite,则意味着已经处理过了,直接跳过
+				//如果BeanDefinition中的configurationClass属性为full或者lite,则意味着已经处理过了,直接跳过
 				//这里需要结合下面的代码才能理解
 				if (logger.isDebugEnabled()) {
 					logger.debug("Bean definition has already been processed as a configuration class: " + beanDef);
@@ -293,7 +293,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 				/**
 				 * true 进入这个方法的前提是，该类加了这些注解：@Conifgure @Component,@ComponentScan,@Import,@ImportResource
 				 * 或者类没加任何注解，但是呢里面有个方法加了@Bean注解。
-				 * 但是只有加了@Configure注解的类 才会将  "configurationClass":"full"，意识是个全注解类
+				 * 但是只有加了@Configure注解的类 才会将  "configurationClass":"full"，意思是个全注解类
 				 * 其余 "configurationClass":"lite"
 				 */
 				//BeanDefinitionHolder 也可以看成一个数据结构,也只是为了方便传值
@@ -395,7 +395,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			/**
 			 * 这里值得注意的是扫描出来的bean当中可能包含了特殊类，比如实现了ImportBeanDefinitionRegistrar接口的类，这种类会放到
 			 * configClasses的数组中去，下面的方法处理：1、从congfigClasses数组中取出实现ImportBeanDefinitionRegistrar接口的类，然后
-			 * 执行接口方法 2、执行被@Bean注解的方法，就是将bean注册到bd-map中 3、执行ImportResource   4、将被Import的类注册到bd-map
+			 * 执行接口方法 2、执行被@Bean注解的方法，就是将bean注册到bd-map中 3、执行ImportResource   4、将被ImportSelector的类注册到bd-map
 			 */
 			this.reader.loadBeanDefinitions(configClasses);
 			alreadyParsed.addAll(configClasses);
