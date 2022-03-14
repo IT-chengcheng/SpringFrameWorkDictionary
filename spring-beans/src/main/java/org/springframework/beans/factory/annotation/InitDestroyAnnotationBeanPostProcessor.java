@@ -136,7 +136,7 @@ public class InitDestroyAnnotationBeanPostProcessor
 		// 找到所有加了@PostConstruct注解的方法
 		LifecycleMetadata metadata = findLifecycleMetadata(bean.getClass());
 		try {
-			// 整整开始执行加了@PostConstruct注解的方法
+			// 真正开始执行加了@PostConstruct注解的方法
 			metadata.invokeInitMethods(bean, beanName);
 		}
 		catch (InvocationTargetException ex) {
