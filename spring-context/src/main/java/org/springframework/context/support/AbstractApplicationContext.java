@@ -525,6 +525,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			//返回一个factory 为什么需要返回一个工厂
 			//因为要对工厂进行初始化
 			// 这个工厂就是 DefaultListableBeanFactory
+			// 这里面也解析了 spring的 xml文件，就是那一堆bean
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
@@ -654,6 +655,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see #getBeanFactory()
 	 */
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+		// 这里面也解析了 spring的 xml文件，就是那一堆bean
 		refreshBeanFactory();
 		ConfigurableListableBeanFactory beanFactory = getBeanFactory();
 		if (logger.isDebugEnabled()) {
