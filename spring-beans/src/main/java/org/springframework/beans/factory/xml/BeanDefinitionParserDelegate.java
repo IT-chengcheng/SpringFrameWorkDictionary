@@ -588,6 +588,9 @@ public class BeanDefinitionParserDelegate {
 		if (DEFAULT_VALUE.equals(lazyInit)) {
 			lazyInit = this.defaults.getLazyInit();
 		}
+		/**
+		 * 处理lazy-init属性
+		 */
 		bd.setLazyInit(TRUE_VALUE.equals(lazyInit));
 
 		String autowire = ele.getAttribute(AUTOWIRE_ATTRIBUTE);

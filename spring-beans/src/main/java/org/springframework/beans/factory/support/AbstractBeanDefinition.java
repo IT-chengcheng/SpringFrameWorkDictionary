@@ -510,6 +510,9 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 */
 	@Override
 	public void setLazyInit(boolean lazyInit) {
+		/**
+		 * 处理lazy-init属性
+		 */
 		this.lazyInit = lazyInit;
 	}
 

@@ -773,6 +773,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		for (String beanName : beanNames) {
 			//合并父BeanDefinition
 			RootBeanDefinition bd = getMergedLocalBeanDefinition(beanName);
+			/**
+			 * bd.isLazyInit()   如果是延迟实例化,则绕过
+			 */
 			if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
 				if (isFactoryBean(beanName)) {
 					//如果是FactoryBean则加上&
@@ -794,9 +797,12 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 						}
 					}
 				}
-				else { // 重要！！！普通bean就是在这里初始化的
-					// 有很多其他bean已经提前实例化了，比如BeanPostProcessor接口的所有实现类
-					//之所以要提前实例化，是因为在createbean完事后，紧接着要拿着BeanPostProcessor对普通bean做处理
+				else {
+					/**
+					 *  重要！！！普通bean就是在这里初始化的
+					 * 	有很多其他bean已经提前实例化了，比如BeanPostProcessor接口的所有实现类
+					 * 	之所以要提前实例化，是因为在createbean完事后，紧接着要拿着BeanPostProcessor对普通bean做处理
+					 */
 					getBean(beanName);
 				}
 			}
